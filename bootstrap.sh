@@ -20,7 +20,7 @@ if [[ ! -d /usr/share/bash-completion ]]; then
     exit 1
 fi
         
-cp -rv home/.bashrc.local ~
+cp -rv home/.bashrc.dyle ~
 cat home/.bashrc >> ~/.bashrc
 cp -rv home/.gitconfig ~
 cp -rv home/.screenrc ~
