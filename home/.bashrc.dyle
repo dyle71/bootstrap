@@ -1,0 +1,29 @@
+#!/bin/bash
+
+export LS_OPTIONS='--color=auto --group-directories-first'
+eval "`dircolors`"
+
+if [ -f /usr/share/bash-completion/bash_completion ]; then
+    . /usr/share/bash-completion/bash_completion
+elif [ -f /etc/bash_completion ]; then
+    . /etc/bash_completion
+fi
+
+if [[ ${EUID} == 0 ]] ; then
+    PS1='\[\033[01;31m\]\u@\h \[\033[01;35m\]\A \[\033[01;34m\]\w \[\033[01;33m\]$(__git_ps1 "(%s)") \[\033[00m\]\n\$ '
+else
+    PS1='\[\033[01;32m\]\u@\h \[\033[01;35m\]\A \[\033[01;34m\]\w \[\033[01;33m\]$(__git_ps1 "(%s)") \[\033[00m\]\n\$ '
+fi
+
+export GIT_PS1_SHOWDIRTYSTATE="true"
+export EDITOR=vim
+export PATH=~/bin:${PATH}
+export TERM=xterm-256color
+
+alias ls='ls --color=auto $LS_OPTIONS'
+alias grep='grep --colour=auto'
+alias egrep='egrep --colour=auto'
+alias fgrep='fgrep --colour=auto'
+alias gpg-decrypt='gpg --armor --decrypt'
+alias gpg-encrypt='gpg --armor --cipher-algo AES256 --symmetric'
+
