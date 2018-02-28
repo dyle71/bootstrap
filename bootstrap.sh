@@ -25,9 +25,9 @@ cat home/.bashrc >> ~/.bashrc
 cp -rv home/.gitconfig ~
 cp -rv home/.screenrc ~
 cp -rv home/.vimrc ~
-cp -rv home/.vim ~/.vim/
+cp -rv home/.vim ~/.vim
 cp -rv home/.vimrc ~
-cp -rv home/.ssh ~/.ssh/
+cp -rv home/.ssh ~/.ssh
 
 git clone https://github.com/vim-scripts/ctrlp.vim.git ~/.vim/bundle/ctrlp.vim
 git clone https://github.com/vim-scripts/The-NERD-tree.git ~/.vim/bundle/The-NERD-tree
