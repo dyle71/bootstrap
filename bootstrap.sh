@@ -1,4 +1,5 @@
 #!/bin/bash
+#!/bin/bash
 
 NICE_APPS="vim git screen"
 NICE_INSTALL="vim git screen bash-completion"
@@ -20,17 +21,17 @@ if [[ ! -d /usr/share/bash-completion ]]; then
     exit 1
 fi
         
-cp -rv home/.bashrc.dyle ~
-cat home/.bashrc >> ~/.bashrc
-cp -rv home/.gitconfig ~
-cp -rv home/.screenrc ~
-cp -rv home/.vimrc ~
-mkdir ~/.vim &> /dev/null
-cp -rv home/.vim/* ~/.vim/
-cp -rv home/.vimrc ~
-mkdir ~/.ssh &> /dev/null
-chmod 700 ~/.ssh
-cp -rv home/.ssh/* ~/.ssh/
+cp -rv home/.bashrc.dyle ${HOME}
+cat home/.bashrc >> ${HOME}/.bashrc
+cp -rv home/.gitconfig ${HOME}
+cp -rv home/.screenrc ${HOME}
+cp -rv home/.vimrc ${HOME}
+mkdir ${HOME}/.vim &> /dev/null
+cp -rv home/.vim/* ${HOME}/.vim/
+cp -rv home/.vimrc ${HOME}
+mkdir ${HOME}/.ssh &> /dev/null
+chmod 700 ${HOME}/.ssh
+cp -rv home/.ssh/* ${HOME}/.ssh/
 
 
 function install_or_update_vim_bundle() {
@@ -45,8 +46,8 @@ function install_or_update_vim_bundle() {
         exit 1
     fi
 
-    mkdir -p "~/.vim/bundle" &> /dev/null
-    BUNDLE_PATH="~/.vim/bundle/${2}"
+    mkdir -p "${HOME}/.vim/bundle" &> /dev/null
+    BUNDLE_PATH="${HOME}/.vim/bundle/${2}"
     if [[ -d ${BUNDLE_PATH} ]]; then
         ( cd ${BUNDLE_PATH} && git pull -v );
     else
