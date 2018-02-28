@@ -45,7 +45,8 @@ function install_or_update_vim_bundle() {
         exit 1
     fi
 
-    BUNDLE_PATH="~/vim/bundle/${2}"
+    mkdir -p "~/.vim/bundle" &> /dev/null
+    BUNDLE_PATH="~/.vim/bundle/${2}"
     if [[ -d ${BUNDLE_PATH} ]]; then
         ( cd ${BUNDLE_PATH} && git pull -v );
     else
