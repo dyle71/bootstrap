@@ -29,7 +29,7 @@ mkdir ~/.vim &> /dev/null
 cp -rv home/.vim/* ~/.vim/
 cp -rv home/.vimrc ~
 mkdir ~/.ssh &> /dev/null
-chmod 600 ~/.ssh
+chmod 700 ~/.ssh
 cp -rv home/.ssh/* ~/.ssh/
 
 git clone https://github.com/vim-scripts/ctrlp.vim.git ~/.vim/bundle/ctrlp.vim
