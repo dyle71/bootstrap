@@ -32,10 +32,31 @@ mkdir ~/.ssh &> /dev/null
 chmod 700 ~/.ssh
 cp -rv home/.ssh/* ~/.ssh/
 
-git clone https://github.com/vim-scripts/ctrlp.vim.git ~/.vim/bundle/ctrlp.vim
-git clone https://github.com/vim-scripts/The-NERD-tree.git ~/.vim/bundle/The-NERD-tree
-git clone https://github.com/vim-airline/vim-airline.git ~/.vim/bundle/vim-airline
-git clone https://github.com/vim-airline/vim-airline-themes.git ~/.vim/bundle/vim-airline-themes
-git clone https://github.com/airblade/vim-gitgutter.git ~/.vim/bundle/vim-gitgutter
-git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
+
+function install_or_update_vim_bundle() {
+
+    if [[ -z ${1} ]]; then
+        echo "No git url given."
+        exit 1
+    fi
+
+    if [[ -z ${2} ]]; then
+        echo "No bundle name given."
+        exit 1
+    fi
+
+    BUNDLE_PATH="~/vim/bundle/${2}"
+    if [[ -d ${BUNDLE_PATH} ]]; then
+        ( cd ${BUNDLE_PATH} && git pull -v );
+    else
+        git clone ${1} ${BUNDLE_PATH}
+    fi
+}
+
+install_or_update_vim_bundle https://github.com/vim-scripts/ctrlp.vim.git ctrlp.vim
+install_or_update_vim_bundle https://github.com/vim-scripts/The-NERD-tree.git The-NERD-tree
+install_or_update_vim_bundle https://github.com/vim-airline/vim-airline.git vim-airline
+install_or_update_vim_bundle https://github.com/vim-airline/vim-airline-themes.git vim-airline-themes
+install_or_update_vim_bundle https://github.com/airblade/vim-gitgutter.git vim-gitgutter
+install_or_update_vim_bundle https://github.com/VundleVim/Vundle.vim.git Vundle.vim
 
