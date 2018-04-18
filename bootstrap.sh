@@ -3,7 +3,7 @@
 cd $(dirname $(readlink -f $0))
 
 NICE_APPS="vim git screen"
-NICE_INSTALL="vim git screen bash-completion"
+NICE_INSTALL="vim git screen bash-completion net-tools"
 for app in ${NICE_APPS}; do
     which ${app} > /dev/null
     if [[ $? != 0 ]]; then
