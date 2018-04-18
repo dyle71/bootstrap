@@ -1,5 +1,6 @@
 #!/bin/bash
-#!/bin/bash
+
+cd $(dirname $(readlink -f $0))
 
 NICE_APPS="vim git screen"
 NICE_INSTALL="vim git screen bash-completion"
