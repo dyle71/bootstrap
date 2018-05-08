@@ -2,8 +2,8 @@
 
 cd $(dirname $(readlink -f $0))
 
-NICE_APPS="vim git screen"
-NICE_INSTALL="vim git screen bash-completion net-tools"
+NICE_APPS="vim git tmux"
+NICE_INSTALL="vim git tmux bash-completion net-tools"
 for app in ${NICE_APPS}; do
     which ${app} > /dev/null
     if [[ $? != 0 ]]; then
