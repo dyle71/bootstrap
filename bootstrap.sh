@@ -2,8 +2,8 @@
 
 cd $(dirname $(readlink -f $0))
 
-NICE_APPS="vim git tmux"
-NICE_INSTALL="vim git tmux bash-completion net-tools"
+NICE_APPS="vim git"
+NICE_INSTALL="vim git screen tmux bash-completion net-tools"
 for app in ${NICE_APPS}; do
     which ${app} > /dev/null
     if [[ $? != 0 ]]; then
@@ -17,8 +17,8 @@ done
 if [[ ! -d /usr/share/bash-completion ]]; then 
     echo "bash-completion not installed."
     echo "Run a: "
-    echo
-    echo "sudo apt-get -y install ${NICE_INSTALL}"
+    echo "      sudo apt-get -y install ${NICE_INSTALL}"
+    echo "to pull in some nice packages."
     exit 1
 fi
         
@@ -52,7 +52,7 @@ function install_or_update_vim_bundle() {
     if [[ -d ${BUNDLE_PATH} ]]; then
         ( cd ${BUNDLE_PATH} && git pull -v );
     else
-        git clone ${1} ${BUNDLE_PATH}
+        git clone --depth 1 ${1} ${BUNDLE_PATH}
     fi
 }
 
