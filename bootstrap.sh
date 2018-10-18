@@ -4,8 +4,9 @@ cd $(dirname $(readlink -f $0))
 
 NICE_APPS="vim git"
 NICE_INSTALL="vim git screen tmux bash-completion net-tools"
-for app in ${NICE_APPS}; do
-    which ${app} > /dev/null
+
+for APP in ${NICE_APPS}; do
+    which ${APP} > /dev/null
     if [[ $? != 0 ]]; then
         echo "At least one of the nice apps (${NICE_APPS}) is missing."
         echo "Run a: "
@@ -14,6 +15,7 @@ for app in ${NICE_APPS}; do
         exit 1
     fi
 done
+
 if [[ ! -d /usr/share/bash-completion ]]; then 
     echo "bash-completion not installed."
     echo "Run a: "
@@ -21,7 +23,13 @@ if [[ ! -d /usr/share/bash-completion ]]; then
     echo "to pull in some nice packages."
     exit 1
 fi
-        
+
+if [[ -z "${HOME}" ]]; then
+    echo "HOME not set. Huh! o.O"
+    echo "Cannot proceed..."
+    exit 1
+fi
+
 cp -rv home/.bashrc.dyle ${HOME}
 cat home/.bashrc >> ${HOME}/.bashrc
 cp -rv home/.gitconfig ${HOME}
@@ -30,7 +38,7 @@ cp -rv home/.vimrc ${HOME}
 mkdir ${HOME}/.vim &> /dev/null
 cp -rv home/.vim/* ${HOME}/.vim/
 cp -rv home/.vimrc ${HOME}
-mkdir ${HOME}/.ssh &> /dev/null
+mkdir ${HOME}/.ssh &> /dev/null &> /dev/null
 chmod 700 ${HOME}/.ssh
 cp -rv home/.ssh/* ${HOME}/.ssh/
 
