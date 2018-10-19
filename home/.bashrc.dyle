@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export LS_OPTIONS='--color=auto --group-directories-first'
+export LS_OPTIONS='--color=auto --group-directories-first --literal'
 eval "`dircolors`"
 
 if [ -f /usr/share/bash-completion/bash_completion ]; then
