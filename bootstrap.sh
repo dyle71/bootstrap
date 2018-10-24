@@ -3,7 +3,7 @@
 cd $(dirname $(readlink -f $0))
 
 NICE_APPS="vim git"
-NICE_INSTALL="vim git screen tmux bash-completion net-tools"
+NICE_INSTALL="vim git screen tmux bash-completion net-tools powerline"
 
 for APP in ${NICE_APPS}; do
     which ${APP} > /dev/null
