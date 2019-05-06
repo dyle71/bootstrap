@@ -2,16 +2,18 @@
 
 cd $(dirname $(readlink -f $0))
 
-NICE_APPS="vim git"
-NICE_INSTALL="vim git screen tmux bash-completion net-tools powerline"
+ESSENTIAL_APPS="vim git"
+NICE_APPS="vim git screen screenfecth tree tmux bash-completion net-tools iproute2"
 
-for APP in ${NICE_APPS}; do
+echo "Nice apps to install:"
+echo "    sudo apt-get install -y ${NICE_APPS}"
+
+for APP in ${ESSENTIAL_APPS}; do
     which ${APP} > /dev/null
     if [[ $? != 0 ]]; then
-        echo "At least one of the nice apps (${NICE_APPS}) is missing."
+        echo "At least one of the nice apps (${ESSENTIAL_APPS}) is missing."
         echo "Run a: "
-        echo
-        echo "sudo apt-get -y install ${NICE_INSTALL}"
+        echo "    sudo apt-get -y install ${NICE_APPS}"
         exit 1
     fi
 done
@@ -19,7 +21,7 @@ done
 if [[ ! -d /usr/share/bash-completion ]]; then 
     echo "bash-completion not installed."
     echo "Run a: "
-    echo "      sudo apt-get -y install ${NICE_INSTALL}"
+    echo "    sudo apt-get -y install ${NICE_APPS}"
     echo "to pull in some nice packages."
     exit 1
 fi
@@ -38,9 +40,6 @@ cp -rv home/.vimrc ${HOME}
 mkdir ${HOME}/.vim &> /dev/null
 cp -rv home/.vim/* ${HOME}/.vim/
 cp -rv home/.vimrc ${HOME}
-mkdir ${HOME}/.ssh &> /dev/null &> /dev/null
-chmod 700 ${HOME}/.ssh
-cp -rv home/.ssh/* ${HOME}/.ssh/
 
 
 function install_or_update_vim_bundle() {
