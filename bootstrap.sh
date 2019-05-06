@@ -1,7 +1,11 @@
 #!/bin/bash
 
-# operate relative to the location of this script
+if [[ "$(basename ${0})" != "bootstrap.sh" ]]; then
+    echo "Invoke this scrtip as a shell script do not 'source' this script."
+    exit 1
+fi
 cd $(dirname $(readlink -f $0))
+
 
 ESSENTIAL_APPS="vim git"
 NICE_APPS="vim git screen tree tmux bash-completion net-tools iproute2"
