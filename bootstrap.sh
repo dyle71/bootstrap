@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# operate relative to the location of this script
 cd $(dirname $(readlink -f $0))
 
 ESSENTIAL_APPS="vim git"
