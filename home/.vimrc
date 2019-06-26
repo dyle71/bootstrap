@@ -74,6 +74,7 @@ set encoding=utf-8
 set autoread
 set nolazyredraw
 set colorcolumn=120
+set timeoutlen=100
 
 set t_Co=256
 color apprentice
