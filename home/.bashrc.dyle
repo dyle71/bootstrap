@@ -28,7 +28,7 @@ alias gpg-encrypt='gpg --armor --cipher-algo AES256 --symmetric'
 alias jsonlint='python3 -mjson.tool'
 
 # if exa is installed (https://the.exa.website/)
-alias el="exa -hB --group --git --time-style long-iso --group-directories-first"
+alias el="exa -B --group --git --time-style long-iso --group-directories-first"
 
 LANG=en_US.UTF-8
 LANGUAGE=en_US
