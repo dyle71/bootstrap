@@ -6,12 +6,6 @@
     st = status
     br = branch
     hist = log --branches --remotes --tags --graph --oneline --decorate
-    type = cat-file -t
-    dump = cat-file -p
-
-[user]
-#    email = 
-#    name = 
 
 [color]
     branch = auto
