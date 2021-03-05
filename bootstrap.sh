@@ -8,7 +8,7 @@ cd $(dirname $(readlink -f $0))
 
 
 ESSENTIAL_APPS="vim git"
-NICE_APPS="vim git screen tree tmux bash-completion net-tools iproute2 exa"
+NICE_APPS="vim git tree tmux bash-completion net-tools iproute2 exa"
 
 echo "Nice apps to install:"
 echo "    sudo apt-get install -y ${NICE_APPS}"
@@ -40,7 +40,6 @@ fi
 cp -rv home/.bashrc.dyle ${HOME}
 cat home/.bashrc >> ${HOME}/.bashrc
 cp -rv home/.gitconfig ${HOME}
-cp -rv home/.screenrc ${HOME}
 cp -rv home/.vimrc ${HOME}
 mkdir ${HOME}/.vim &> /dev/null
 cp -rv home/.vim/* ${HOME}/.vim/
