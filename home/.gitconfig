@@ -9,6 +9,7 @@
     hist = log --branches --remotes --tags --graph --oneline --decorate
     type = cat-file -t
     dump = cat-file -p
+    ls = ls-files
 
 [user]
 #    email = 
