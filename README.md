@@ -13,3 +13,4 @@ $ apt-get install -y vim git tree tmux bash-completion net-tools iproute2 dnsuti
 $ apt-get install -y exa
 ```
 
+**NOTE**: exa is avaible in Ubuntu 22.04 LTS.
