@@ -58,6 +58,7 @@ set autochdir
 set textwidth=0
 set novisualbell
 set noerrorbells
+set belloff=all
 " set cursorline
 set hlsearch
 set tabstop=4 softtabstop=0 expandtab shiftwidth=4 smarttab
