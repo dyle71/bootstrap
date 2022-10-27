@@ -27,4 +27,4 @@ alias gpg-decrypt='gpg --armor --decrypt'
 alias gpg-encrypt='gpg --armor --cipher-algo AES256 --symmetric'
 alias jsonlint='python3 -mjson.tool'
 alias el="exa -B --group --time-style long-iso --group-directories-first"
-alias bat='batcat'
+alias bat='batcat -n'
