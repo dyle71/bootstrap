@@ -8,7 +8,7 @@ cd $(dirname $(readlink -f $0))
 
 
 ESSENTIAL_APPS="vim git"
-NICE_APPS="vim git tree tmux bash-completion net-tools iproute2 exa"
+NICE_APPS="vim git tmux bash-completion net-tools iproute2 exa batcat"
 
 echo "Nice apps to install:"
 echo "    sudo apt-get install -y ${NICE_APPS}"
