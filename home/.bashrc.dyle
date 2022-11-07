@@ -21,10 +21,9 @@ export TERM=xterm-256color
 
 alias ls='ls --color=auto $LS_OPTIONS'
 alias grep='grep --colour=auto'
-alias egrep='egrep --colour=auto'
-alias fgrep='fgrep --colour=auto'
-alias gpg-decrypt='gpg --armor --decrypt'
-alias gpg-encrypt='gpg --armor --cipher-algo AES256 --symmetric'
-alias jsonlint='python3 -mjson.tool'
 alias el="exa -B --group --time-style long-iso --group-directories-first"
 alias bat='batcat -n'
+
+if [ -d ~/Applications ]; then
+    export PATH=~/Applications:$PATH
+fi
