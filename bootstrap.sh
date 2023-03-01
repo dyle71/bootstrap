@@ -72,5 +72,3 @@ install_or_update_vim_bundle https://github.com/vim-scripts/The-NERD-tree.git Th
 install_or_update_vim_bundle https://github.com/vim-airline/vim-airline.git vim-airline
 install_or_update_vim_bundle https://github.com/vim-airline/vim-airline-themes.git vim-airline-themes
 install_or_update_vim_bundle https://github.com/airblade/vim-gitgutter.git vim-gitgutter
-install_or_update_vim_bundle https://github.com/VundleVim/Vundle.vim.git Vundle.vim
-
