@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export LS_OPTIONS='--color=auto --group-directories-first --literal'
-eval "`dircolors`"
+eval "`dircolors -b`"
 
 if [ -f /usr/share/bash-completion/bash_completion ]; then
     . /usr/share/bash-completion/bash_completion
@@ -9,10 +9,20 @@ elif [ -f /etc/bash_completion ]; then
     . /etc/bash_completion
 fi
 
-if [[ ${EUID} == 0 ]] ; then
-    PS1='\[\033[01;31m\]\u@\h \[\033[01;35m\]\A \[\033[01;34m\]\w \[\033[01;33m\]$(__git_ps1 "(%s)") \[\033[00m\]\n\$ '
+# Add __git_ps1 to PS1 only if we have git installed.
+which git &>/dev/null
+if [ "$?" = 0 ]; then
+    if [[ ${EUID} == 0 ]] ; then
+        PS1='\[\033[01;31m\]\u@\h \[\033[01;35m\]\A \[\033[01;34m\]\w \[\033[01;33m\]$(__git_ps1 "(%s)") \[\033[00m\]\n\$ '
+    else
+        PS1='\[\033[01;32m\]\u@\h \[\033[01;35m\]\A \[\033[01;34m\]\w \[\033[01;33m\]$(__git_ps1 "(%s)") \[\033[00m\]\n\$ '
+    fi
 else
-    PS1='\[\033[01;32m\]\u@\h \[\033[01;35m\]\A \[\033[01;34m\]\w \[\033[01;33m\]$(__git_ps1 "(%s)") \[\033[00m\]\n\$ '
+    if [[ ${EUID} == 0 ]] ; then
+        PS1='\[\033[01;31m\]\u@\h \[\033[01;35m\]\A \[\033[01;34m\]\w \[\033[00m\]\n\$ '
+    else
+        PS1='\[\033[01;32m\]\u@\h \[\033[01;35m\]\A \[\033[01;34m\]\w \[\033[00m\]\n\$ '
+    fi
 fi
 
 export GIT_PS1_SHOWDIRTYSTATE="true"

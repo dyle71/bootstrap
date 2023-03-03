@@ -7,15 +7,6 @@ set nocompatible
 " plugin management
 "
 filetype off
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-Plugin 'VundleVim/Vundle.vim'
-Plugin 'vim-airline/vim-airline'
-Plugin 'vim-airline/vim-airline-themes'
-Plugin 'The-NERD-tree'
-Plugin 'ctrlp.vim'
-Plugin 'airblade/vim-gitgutter'
-call vundle#end()
 filetype plugin indent on
 
 
@@ -76,7 +67,7 @@ set autoread
 set nolazyredraw
 set colorcolumn=120
 set timeoutlen=100
-
+set encoding=utf-8
 set t_Co=256
 color apprentice
 syntax on
