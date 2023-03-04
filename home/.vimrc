@@ -65,10 +65,11 @@ set mouse=a
 set encoding=utf-8
 set autoread
 set nolazyredraw
-set colorcolumn=120
+set colorcolumn=80,120,160
 set timeoutlen=100
 set encoding=utf-8
 set t_Co=256
+set cursorline
 color apprentice
 syntax on
 

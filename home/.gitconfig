@@ -26,3 +26,7 @@
 
 [pull]
     rebase = true
+
+[core]
+    pager = cat
+

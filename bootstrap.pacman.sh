@@ -1,24 +1,23 @@
 #!/bin/bash
 
-if [[ "$(basename ${0})" != "bootstrap.sh" ]]; then
+if [[ "$(basename ${0})" != "bootstrap.pacman.sh" ]]; then
     echo "Invoke this script as a shell script do not 'source' this script."
     exit 1
 fi
 cd $(dirname $(readlink -f $0))
 
-
 ESSENTIAL_APPS="vim git"
-NICE_APPS="vim git tmux bash-completion net-tools iproute2 exa batcat"
+NICE_APPS="vim git tmux bash-completion net-tools iproute2 exa batcat zsh powerline"
 
 echo "Nice apps to install:"
-echo "    sudo apt-get install -y ${NICE_APPS}"
+echo "    sudo pacman -S ${NICE_APPS}"
 
 for APP in ${ESSENTIAL_APPS}; do
     which ${APP} > /dev/null
     if [[ $? != 0 ]]; then
         echo "At least one of the nice apps (${ESSENTIAL_APPS}) is missing."
         echo "Run a: "
-        echo "    sudo apt-get -y install ${NICE_APPS}"
+        echo "    sudo pacman -S ${ESSENTIAL_APPS}"
         exit 1
     fi
 done
@@ -26,7 +25,7 @@ done
 if [[ ! -d /usr/share/bash-completion ]]; then 
     echo "bash-completion not installed."
     echo "Run a: "
-    echo "    sudo apt-get -y install ${NICE_APPS}"
+    echo "    sudo pacman -S install ${NICE_APPS}"
     echo "to pull in some nice packages."
     exit 1
 fi
@@ -38,9 +37,11 @@ if [[ -z "${HOME}" ]]; then
 fi
 
 cp -v home/.bashrc.dyle ${HOME}
+cp -v home/.zshrc.dyle ${HOME}
+cp -v home/.p10k.zsh ${HOME}
 cp -v home/.gitconfig ${HOME}
 cp -v home/.vimrc ${HOME}
 mkdir ${HOME}/.vim &> /dev/null
 cp -rv home/.vim/* ${HOME}/.vim/
-cp -v home/.vimrc ${HOME}
 grep -q 'test -f ~/.bashrc.dyle && . ~/.bashrc.dyle' ~/.bashrc || echo 'test -f ~/.bashrc.dyle && . ~/.bashrc.dyle' >> ~/.bashrc
+grep -q 'test -f ~/.zshrc.dyle && . ~/.zshrc.dyle' ~/.zshrc || echo 'test -f ~/.zshrc.dyle && . ~/.zshrc.dyle' >> ~/.zshrc

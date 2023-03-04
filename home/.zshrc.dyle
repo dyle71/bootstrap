@@ -1,0 +1,24 @@
+# My .zshrc settings
+
+bindkey -v
+
+powerline-daemon -q
+. /usr/share/powerline/bindings/zsh/powerline.zsh
+ZSH_THEME="powerlevel10k/powerlevel10k"
+
+# Standard settings.
+HISTFILE=~/.histfile
+HISTSIZE=5000
+SAVEHIST=5000
+unsetopt beep
+
+export EDITOR='vim'
+export VISUAL='less'
+export TERM=xterm-256color
+
+alias ls='ls --color=auto'
+alias grep='grep --color=auto'
+alias el='exa -B --group --time-style long-iso --group-directories-first'
+
+typeset -U path PATH
+path=(~/Applications $path)
