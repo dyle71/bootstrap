@@ -21,4 +21,4 @@ alias grep='grep --color=auto'
 alias el='exa -B --group --time-style long-iso --group-directories-first'
 
 typeset -U path PATH
-path=(~/Applications $path)
+path=(~/Applications ~/.local/bin $path)
