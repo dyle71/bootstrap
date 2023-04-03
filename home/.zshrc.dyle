@@ -1,24 +1,27 @@
-# My .zshrc settings
-
-bindkey -v
+# ------------------------------------------------------------
+# Dyle .zshrc settings
 
 powerline-daemon -q
-. /usr/share/powerline/bindings/zsh/powerline.zsh
-ZSH_THEME="powerlevel10k/powerlevel10k"
 
-# Standard settings.
 HISTFILE=~/.histfile
 HISTSIZE=5000
 SAVEHIST=5000
-unsetopt beep
+
+unsetopt autocd beep extendedglob notify
+bindkey -v
 
 export EDITOR='vim'
-export VISUAL='less'
 export TERM=xterm-256color
+export GPG_TTY=$(tty)
+export BAT_THEME="Dracula"
 
-alias ls='ls --color=auto'
+alias ls='ls --color=auto --group-directories-first'
 alias grep='grep --color=auto'
 alias el='exa -B --group --time-style long-iso --group-directories-first'
 
+# Maven - J2EE =(
+alias mvn='mvn -Dstyle.color=always'
+alias mp='mvn -Dstyle.color=always package -Dmaven.test.skip=true -Dmaven.translate.skip=true'
+
 typeset -U path PATH
-path=(~/Applications ~/.local/bin $path)
+path=(~/Applications $path)
