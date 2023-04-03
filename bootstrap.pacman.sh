@@ -7,7 +7,7 @@ fi
 cd $(dirname $(readlink -f $0))
 
 ESSENTIAL_APPS="vim git"
-NICE_APPS="vim git tmux bash-completion net-tools iproute2 exa batcat zsh powerline"
+NICE_APPS="vim git net-tools iproute2 exa bat zsh powerline zsh-theme-poerlevel10k"
 
 echo "Nice apps to install:"
 echo "    sudo pacman -S ${NICE_APPS}"
@@ -36,12 +36,17 @@ if [[ -z "${HOME}" ]]; then
     exit 1
 fi
 
-cp -v home/.bashrc.dyle ${HOME}
+echo "Install oh-my-zsh:"
+echo 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
+
+echo "Install P10k zsh Theme:"
+echo 'git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k'
+
 cp -v home/.zshrc.dyle ${HOME}
 cp -v home/.p10k.zsh ${HOME}
 cp -v home/.gitconfig ${HOME}
 cp -v home/.vimrc ${HOME}
 mkdir ${HOME}/.vim &> /dev/null
 cp -rv home/.vim/* ${HOME}/.vim/
-grep -q 'test -f ~/.bashrc.dyle && . ~/.bashrc.dyle' ~/.bashrc || echo 'test -f ~/.bashrc.dyle && . ~/.bashrc.dyle' >> ~/.bashrc
 grep -q 'test -f ~/.zshrc.dyle && . ~/.zshrc.dyle' ~/.zshrc || echo 'test -f ~/.zshrc.dyle && . ~/.zshrc.dyle' >> ~/.zshrc
+
