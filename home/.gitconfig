@@ -28,5 +28,5 @@
     rebase = true
 
 [core]
-    pager = cat
-
+	pager = bat --theme Dracula --style=changes
+	autocrlf = input
