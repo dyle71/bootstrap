@@ -6,8 +6,8 @@ if [[ "$(basename ${0})" != "bootstrap.apt.sh" ]]; then
 fi
 cd $(dirname $(readlink -f $0))
 
-ESSENTIAL_APPS="vim git"
-NICE_APPS="vim git tmux bash-completion net-tools iproute2 exa batcat zsh"
+ESSENTIAL_APPS="neovim git"
+NICE_APPS="neovim git bash-completion net-tools iproute2 exa batcat zsh"
 
 echo "Nice apps to install:"
 echo "    sudo apt-get install -y ${NICE_APPS}"
@@ -40,8 +40,9 @@ cp -v home/.bashrc.dyle ${HOME}
 cp -v home/.zshrc.dyle ${HOME}
 cp -v home/.p10k.zsh ${HOME}
 cp -v home/.gitconfig ${HOME}
-cp -v home/.vimrc ${HOME}
-mkdir ${HOME}/.vim &> /dev/null
-cp -rv home/.vim/* ${HOME}/.vim/
+mkdir -p ~/.config/nvim &> /dev/null
+cp -vr home/.config/nvim ~/.config/nvim
+
 grep -q 'test -f ~/.bashrc.dyle && . ~/.bashrc.dyle' ~/.bashrc || echo 'test -f ~/.bashrc.dyle && . ~/.bashrc.dyle' >> ~/.bashrc
 grep -q 'test -f ~/.zshrc.dyle && . ~/.zshrc.dyle' ~/.zshrc || echo 'test -f ~/.zshrc.dyle && . ~/.zshrc.dyle' >> ~/.zshrc
+

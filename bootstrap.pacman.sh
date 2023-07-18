@@ -6,8 +6,8 @@ if [[ "$(basename ${0})" != "bootstrap.pacman.sh" ]]; then
 fi
 cd $(dirname $(readlink -f $0))
 
-ESSENTIAL_APPS="vim git"
-NICE_APPS="vim git net-tools iproute2 exa bat zsh powerline zsh-theme-poerlevel10k"
+ESSENTIAL_APPS="neovim git"
+NICE_APPS="neovim git net-tools iproute2 exa bat zsh powerline zsh-theme-poerlevel10k"
 
 echo "Nice apps to install:"
 echo "    sudo pacman -S ${NICE_APPS}"
@@ -45,8 +45,7 @@ echo 'git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUS
 cp -v home/.zshrc.dyle ${HOME}
 cp -v home/.p10k.zsh ${HOME}
 cp -v home/.gitconfig ${HOME}
-cp -v home/.vimrc ${HOME}
-mkdir ${HOME}/.vim &> /dev/null
-cp -rv home/.vim/* ${HOME}/.vim/
+mkdir -p ~/.config/nvim &> /dev/null
+cp -vr home/.config/nvim ~/.config/nvim
 grep -q 'test -f ~/.zshrc.dyle && . ~/.zshrc.dyle' ~/.zshrc || echo 'test -f ~/.zshrc.dyle && . ~/.zshrc.dyle' >> ~/.zshrc
 
