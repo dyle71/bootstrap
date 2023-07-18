@@ -29,5 +29,5 @@ alias nv=nvim
 
 # Maven - J2EE =(
 alias mvn='mvn -Dstyle.color=always'
-alias mp='mvn -Dstyle.color=always package -Dmaven.test.skip=true -Dmaven.translate.skip=true'
+alias mp='mvn -Dstyle.color=always package -Dmaven.test.skip=true -Dmaven.translate.skip=true -Dturbo.enabled=false'
 
