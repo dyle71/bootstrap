@@ -14,6 +14,7 @@ SAVEHIST=5000
 
 unsetopt autocd beep extendedglob notify
 bindkey -v
+bindkey "^H" backward-kill-word
 
 typeset -U path PATH
 path=(~/Applications $path)
@@ -22,7 +23,6 @@ alias ls='ls --color=auto --group-directories-first'
 alias grep='grep --color=auto'
 alias el='exa -B --group --time-style long-iso --group-directories-first'
 alias l='el -l'
-alias c='clear'
 alias dc='docker compose'
 alias lt='l -T'
 alias nv=nvim
