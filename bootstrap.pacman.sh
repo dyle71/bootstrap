@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [[ "$(basename ${0})" != "bootstrap.pacman.sh" ]]; then
     echo "Invoke this script as a shell script do not 'source' this script."
@@ -6,29 +6,10 @@ if [[ "$(basename ${0})" != "bootstrap.pacman.sh" ]]; then
 fi
 cd $(dirname $(readlink -f $0))
 
-ESSENTIAL_APPS="neovim git"
-NICE_APPS="neovim git net-tools iproute2 exa bat zsh powerline zsh-theme-poerlevel10k"
+APPS="neovim git net-tools iproute2 exa bat zsh powerline zsh-theme-poerlevel10k curl wget"
 
-echo "Nice apps to install:"
-echo "    sudo pacman -S ${NICE_APPS}"
-
-for APP in ${ESSENTIAL_APPS}; do
-    which ${APP} > /dev/null
-    if [[ $? != 0 ]]; then
-        echo "At least one of the nice apps (${ESSENTIAL_APPS}) is missing."
-        echo "Run a: "
-        echo "    sudo pacman -S ${ESSENTIAL_APPS}"
-        exit 1
-    fi
-done
-
-if [[ ! -d /usr/share/bash-completion ]]; then 
-    echo "bash-completion not installed."
-    echo "Run a: "
-    echo "    sudo pacman -S install ${NICE_APPS}"
-    echo "to pull in some nice packages."
-    exit 1
-fi
+echo "sudo pacman -S ${NICE_APPS}"
+sudo pacman -S ${NICE_APPS}
 
 if [[ -z "${HOME}" ]]; then
     echo "HOME not set. Huh! o.O"
@@ -42,10 +23,4 @@ echo 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/mast
 echo "Install P10k zsh Theme:"
 echo 'git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k'
 
-cp -v home/.zshrc.dyle ${HOME}
-cp -v home/.p10k.zsh ${HOME}
-cp -v home/.gitconfig ${HOME}
-mkdir -p ~/.config/nvim &> /dev/null
-cp -vr home/.config/nvim ~/.config/nvim
-grep -q 'test -f ~/.zshrc.dyle && . ~/.zshrc.dyle' ~/.zshrc || echo 'test -f ~/.zshrc.dyle && . ~/.zshrc.dyle' >> ~/.zshrc
-
+./link-config.sh
