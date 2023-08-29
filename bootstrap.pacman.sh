@@ -8,8 +8,8 @@ cd $(dirname $(readlink -f $0))
 
 APPS="neovim git net-tools iproute2 exa bat zsh powerline zsh-theme-poerlevel10k curl wget"
 
-echo "sudo pacman -S ${NICE_APPS}"
-sudo pacman -S ${NICE_APPS}
+echo "sudo pacman -S ${APPS}"
+sudo pacman -S ${APPS}
 
 if [[ -z "${HOME}" ]]; then
     echo "HOME not set. Huh! o.O"
