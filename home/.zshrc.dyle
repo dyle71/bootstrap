@@ -22,8 +22,8 @@ path=(~/Applications $path)
 
 alias ls='ls --color=auto --group-directories-first'
 alias grep='grep --color=auto'
-alias el='exa -B --group --time-style long-iso --group-directories-first'
-alias l='el -l'
+alias el='eza -B --group --time-style long-iso --group-directories-first'
+alias l='el -l --icons'
 alias nv=nvim
 
 # Maven - J2EE =(
