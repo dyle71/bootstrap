@@ -118,3 +118,11 @@ source $ZSH/oh-my-zsh.sh
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
 test -f ~/.zshrc.dyle && source ~/.zshrc.dyle
+
+# pnpm
+export PNPM_HOME="/home/dyle/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end

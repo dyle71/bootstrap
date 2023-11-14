@@ -7,7 +7,8 @@ export TERM=xterm-256color
 export GPG_TTY=$(tty)
 export BAT_THEME="Dracula"
 export NVM_SYMLINK_CURRENT="true"
-export CXF_HOME=/usr/share/java/apache-cxf
+export PNPM_HOME=~/.local/share/pnpm
+export PATH="$PNPM_HOME:$PATH"
 
 HISTFILE=~/.histfile
 HISTSIZE=5000
@@ -27,6 +28,8 @@ alias l='el -l --icons'
 alias nv=nvim
 
 # Maven - J2EE =(
-alias mvn='mvn -Dstyle.color=always'
-alias mp='mvn -Dstyle.color=always -Dmaven.test.skip=true -Dmaven.translate.skip=true -Dturbo.enabled=false'
+# To be deleted. You should not use Java.
+# Not to mention maven.
+#alias mvn='mvn -Dstyle.color=always'
+#alias mp='mvn -Dstyle.color=always -Dmaven.test.skip=true -Dmaven.translate.skip=true -Dturbo.enabled=false'
 
