@@ -1,7 +1,6 @@
 # ------------------------------------------------------------
 # Dyle .zshrc settings
 
-export LC_ALL="en_US.UTF-8"
 export EDITOR="nvim"
 export TERM=xterm-256color
 export GPG_TTY=$(tty)
@@ -10,6 +9,10 @@ export NVM_SYMLINK_CURRENT="true"
 export PNPM_HOME=~/.local/share/pnpm
 export PATH="$PNPM_HOME:$PATH"
 
+export LANG="en_US.UTF-8"
+export LC_TIME="de_AT.UTF-8"
+export LC_COLLATE="de_AT.UTF-8"
+
 HISTFILE=~/.histfile
 HISTSIZE=5000
 SAVEHIST=5000
@@ -17,6 +20,10 @@ SAVEHIST=5000
 unsetopt autocd beep extendedglob notify
 bindkey -v
 bindkey "^H" backward-kill-word
+
+# Load nvm - Node Version Manage
+export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
 typeset -U path PATH
 path=(~/Applications $path)
