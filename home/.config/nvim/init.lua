@@ -481,6 +481,8 @@ cmp.setup {
 -- dyle
 -- Do not wrap lines at default
 vim.o.wrap = false
-vim.o.tabstop = 4
-vim.o.softtabstop = 4
-vim.o.expandtab = on
+vim.opt.tabstop = 2
+vim.opt.shiftwidth = 2
+vim.opt.expandtab = true
+vim.bo.softtabstop = 2
+
