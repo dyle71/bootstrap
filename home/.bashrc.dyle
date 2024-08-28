@@ -33,6 +33,9 @@ alias ls='ls --color=auto $LS_OPTIONS'
 alias grep='grep --colour=auto'
 alias el="exa -B --group --time-style long-iso --group-directories-first"
 alias bat='batcat -n'
+alias l='el -l --icons'
+alias nv='nvim'
+alias nn='nnn -d'
 
 if [ -d ~/.local/bin ]; then
     export PATH=~/.local/bin:$PATH

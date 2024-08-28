@@ -36,4 +36,5 @@ alias grep='grep --color=auto'
 alias el='eza -B --group --time-style long-iso --group-directories-first'
 alias l='el -l --icons'
 alias nv=nvim
+alias nn='nnn -d'
 
