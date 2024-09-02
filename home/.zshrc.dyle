@@ -14,7 +14,7 @@ export LC_TIME="de_AT.UTF-8"
 export LC_COLLATE="de_AT.UTF-8"
 
 # Force GTK Open Dialog to sort directories before files.
-test -e $(which dconf) && dconf write /org/gtk/settings/file-chooser/sort-directories-first true
+test -e "$(which dconf)" && dconf write /org/gtk/settings/file-chooser/sort-directories-first true
 
 HISTFILE=~/.histfile
 HISTSIZE=5000
