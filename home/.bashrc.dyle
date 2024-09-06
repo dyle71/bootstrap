@@ -34,7 +34,6 @@ alias grep='grep --colour=auto'
 alias el="exa -B --group --time-style long-iso --group-directories-first"
 alias bat='batcat -n'
 alias l='el -l --icons'
-alias nv='nvim'
 alias nn='nnn -d'
 alias pr='paru -Syyu --skipreview'
 
