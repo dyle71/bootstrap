@@ -36,6 +36,7 @@ alias bat='batcat -n'
 alias l='el -l --icons'
 alias nv='nvim'
 alias nn='nnn -d'
+alias pr='paru -Syyu --skipreview'
 
 if [ -d ~/.local/bin ]; then
     export PATH=~/.local/bin:$PATH
