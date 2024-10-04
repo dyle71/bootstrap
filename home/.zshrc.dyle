@@ -21,6 +21,8 @@ HISTSIZE=5000
 SAVEHIST=5000
 
 unsetopt autocd beep extendedglob notify
+setopt rmstarsilent
+
 bindkey -v
 bindkey "^H" backward-kill-word
 
