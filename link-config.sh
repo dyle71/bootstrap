@@ -8,3 +8,4 @@ ln -sv home/.zshrc.dyle ${HOME}
 ln -sv home/.p10k.zsh ${HOME}
 ln -sv home/.gitconfig ${HOME}
 ln -sv home/.config/nvim ${HOME}/.config/nvim
+ln -sv home/.config/bat ${HOME}/.config/bat
