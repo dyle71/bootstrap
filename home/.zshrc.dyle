@@ -1,6 +1,8 @@
 # ------------------------------------------------------------
 # Dyle .zshrc settings
 
+zstyle ':omz:update' mode auto
+
 export EDITOR="nvim"
 export TERM=xterm-256color
 export GPG_TTY=$(tty)
