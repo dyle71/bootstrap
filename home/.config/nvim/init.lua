@@ -120,10 +120,11 @@ require('lazy').setup({
     'lukas-reineke/indent-blankline.nvim',
     -- Enable `lukas-reineke/indent-blankline.nvim`
     -- See `:help indent_blankline.txt`
-    opts = {
-      char = '┊',
-      show_trailing_blankline_indent = false,
-    },
+    main = "ibl"
+    -- opts = {
+    --   char = '┊',
+    --   show_trailing_blankline_indent = false,
+    -- },
   },
 
   -- "gc" to comment visual regions/lines
@@ -152,6 +153,24 @@ require('lazy').setup({
       'nvim-treesitter/nvim-treesitter-textobjects',
     },
     build = ':TSUpdate',
+  },
+
+  {
+    "akinsho/nvim-bufferline.lua",
+    dependencies = { "nvim-tree/nvim-web-devicons" }, -- for file icons
+    config = function()
+      require("bufferline").setup({
+        options = {
+          offsets = {
+            { filetype = "NvimTree", text = "File Explorer", text_align = "center", separator = true },
+          },
+          show_buffer_close_icons = true,
+          show_close_icon = false,
+          separator_style = "slant",
+          numbers = 'buffer_id',
+        },
+      })
+    end,
   },
 
   -- NOTE: Next Step on Your Neovim Journey: Add/Configure additional "plugins" for kickstart
@@ -489,4 +508,5 @@ vim.o.cursorline = true
 vim.o.termguicolors = true
 vim.o.number = true
 vim.o.relativenumber = true
+vim.opt.termguicolors = true
 
