@@ -1,8 +1,9 @@
 # ------------------------------------------------------------
 # Dyle .zshrc settings
 
+DISABLE_UPDATE_PROMPT=true
 DISABLE_AUTO_UPDATE=true
-zstyle ':omz:update' mode auto
+zstyle ':omz:update' mode disabled
 
 export EDITOR="nvim"
 export TERM=xterm-256color
