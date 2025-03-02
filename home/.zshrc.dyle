@@ -1,6 +1,7 @@
 # ------------------------------------------------------------
 # Dyle .zshrc settings
 
+DISABLE_AUTO_UPDATE=true
 zstyle ':omz:update' mode auto
 
 export EDITOR="nvim"
