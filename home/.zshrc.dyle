@@ -35,7 +35,7 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
 typeset -U path PATH
-path=(~/Applications ~/.local/bin  $path)
+path=(~/Applications ~/.local/bin ~/.bun/bin $path)
 
 alias ls='ls --color=auto --group-directories-first'
 alias grep='grep --color=auto'
