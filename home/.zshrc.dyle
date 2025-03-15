@@ -1,25 +1,15 @@
 # ------------------------------------------------------------
 # Dyle .zshrc settings
 
-DISABLE_UPDATE_PROMPT=true
-DISABLE_AUTO_UPDATE=true
-zstyle ':omz:update' mode disabled
-
 export EDITOR="nvim"
 export TERM=xterm-256color
 export GPG_TTY=$(tty)
 export BAT_THEME="Dracula"
-export NVM_SYMLINK_CURRENT="true"
-export PNPM_HOME=~/.local/share/pnpm
-export PATH="$PNPM_HOME:$PATH"
 
 export LANG="en_US.UTF-8"
 export LC_ALL="en_US.UTF-8"
 export LC_TIME="de_AT.UTF-8"
 export LC_COLLATE="de_AT.UTF-8"
-
-# Force GTK Open Dialog to sort directories before files.
-test -e "$(which dconf)" && dconf write /org/gtk/settings/file-chooser/sort-directories-first true
 
 HISTFILE=~/.histfile
 HISTSIZE=5000
@@ -42,6 +32,5 @@ alias ls='ls --color=auto --group-directories-first'
 alias grep='grep --color=auto'
 alias el='eza -B --group --time-style long-iso --group-directories-first'
 alias l='el -l --icons'
-alias nn='nnn -d'
 alias pr='paru -Syyu --skipreview'
 
