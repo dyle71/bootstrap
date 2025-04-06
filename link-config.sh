@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
-cd $(dirname $(readlink -f $0))
+INSTALL_PATH=$(dirname $(readlink -f $0))
 
+cd ${HOME}
 mkdir -p ${HOME}/.config &> /dev/null
-ln -sfv home/.zshrc ${HOME}
-ln -sfv home/.zshrc.dyle ${HOME}
-ln -sfv home/.p10k.zsh ${HOME}
-ln -sfv home/.gitconfig ${HOME}
-ln -sfv home/.config/nvim ${HOME}/.config/nvim
-ln -sfv home/.config/bat ${HOME}/.config/bat
+
+ln -sfv ${INSTALL_PATH}/home/.zshrc ${HOME}/.zshrc
+ln -sfv ${INSTALL_PATH}/home/.zshrc.dyle ${HOME}/.zshrc.dyle
+ln -sfv ${INSTALL_PATH}/home/.p10k.zsh ${HOME}/.p10k.zsh
+ln -sfv ${INSTALL_PATH}/home/.gitconfig ${HOME}.gitconfig
+ln -sfv ${INSTALL_PATH}/home/.config/nvim ${HOME}/.config/nvim
+ln -sfv ${INSTALL_PATH}/home/.config/bat ${HOME}/.config/bat
