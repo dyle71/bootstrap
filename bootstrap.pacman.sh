@@ -17,10 +17,7 @@ if [[ -z "${HOME}" ]]; then
     exit 1
 fi
 
-echo "Install oh-my-zsh:"
-echo 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"'
-
 echo "Install P10k zsh Theme:"
-echo 'git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}/themes/powerlevel10k'
+echo 'git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /usr/local/src/powerlevel10k'
 
 ./link-config.sh
