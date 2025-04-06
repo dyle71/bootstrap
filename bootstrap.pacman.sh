@@ -19,5 +19,6 @@ fi
 
 echo "Install P10k zsh Theme:"
 echo 'git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /usr/local/src/powerlevel10k'
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git /usr/local/src/powerlevel10k
 
 ./link-config.sh
