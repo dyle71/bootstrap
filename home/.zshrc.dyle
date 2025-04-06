@@ -49,6 +49,7 @@ path=(~/Applications ~/.local/bin ~/.bun/bin $path)
 
 alias ls='ls --color=auto --group-directories-first'
 alias grep='grep --color=auto'
-alias el='eza -B --group --time-style long-iso --group-directories-first'
-alias l='el -l --icons'
-alias pr='paru -Syyu --skipreview'
+which eza &> /dev/null && alias el='eza -B --group --time-style long-iso --group-directories-first'
+which exa &> /dev/null && alias el='exa -B --group --time-style long-iso --group-directories-first'
+alias | grep ^el &> /dev/null &&  alias l='el -l --icons'
+which paru &> /dev/null && alias pr='paru -Syyu --skipreview'
