@@ -38,5 +38,3 @@ echo "git clone --depth 1 -- https://github.com/marlonrichert/zsh-snap.git ${ZNA
 git clone --depth=1 https://github.com/marlonrichert/zsh-snap.git ${ZNAP_REPOS}/znap
 
 ./link-config.sh
-
-zsh -i -c "source ~/.
