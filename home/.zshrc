@@ -6,3 +6,5 @@ source /usr/local/src/powerlevel10k/powerlevel10k.zsh-theme
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 [[ ! -f ~/.zshrc.dyle ]] || source ~/.zshrc.dyle
 
+ZNAP_REPOS="/usr/local/src/znap-repos"
+[[ ! -f ${ZNAP_REPOS}/znap/znap.zsh ]] || source ${ZNAP_REPOS}/znap/znap.zsh
