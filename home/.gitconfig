@@ -42,3 +42,11 @@
 
 [init]
 	defaultBranch = main
+[maintenance]
+	repo = /usr/local/src/znap-repos/znap
+	repo = /home/dyle/.znap-repos/znap
+	repo = /home/dyle/.znap-repos/ael-code/zsh-colored-man-pages
+	repo = /home/dyle/.znap-repos/romkatv/powerlevel10k
+	repo = /home/dyle/.znap-repos/zsh-users/zsh-autosuggestions
+	repo = /home/dyle/.znap-repos/zsh-users/zsh-completions
+	repo = /home/dyle/.znap-repos/zsh-users/zsh-syntax-highlighting
