@@ -11,7 +11,7 @@ OS_DIST_NAME=${ID}
 
 APPS_TO_INSTALL=""
 if [[ "${OS_DIST_NAME}" == "arch" ]]; then
-  APPS_TO_INSTALL="neovim git net-tools eza iproute2 bat zsh curl wget"
+  APPS_TO_INSTALL="neovim git net-tools eza iproute2 batcat zsh curl wget"
 elif [[ "${OS_DIST_NAME}" == "ubuntu" ]]; then
   APPS_TO_INSTALL="neovim git net-tools exa iproute2 bat zsh curl wget"
 elif [[ "${OS_DIST_NAME}" == "debian" ]]; then
