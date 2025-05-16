@@ -16,9 +16,5 @@ znap source zsh-users/zsh-completions
 znap source zsh-users/zsh-syntax-highlighting
 znap prompt romkatv/powerlevel10k
 
-man() {
-  command man "$@" | col -bx | bat --paging=always --language=man
-}
-
 [[ ! -f ~/.zshrc.dyle ]] || source ~/.zshrc.dyle
 
