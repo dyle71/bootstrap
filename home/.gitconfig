@@ -13,6 +13,7 @@
     lg = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)%ai (%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)'
     lga = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)%ai (%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)' --all
     rev = rev-parse --short HEAD
+    lsquoted = "!f() { git -C \"$(git rev-parse --show-toplevel)\" ls-files -z | xargs -0 -n1 printf '%q\\n'; }; f"
 
 [user]
 #    email = 

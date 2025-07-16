@@ -56,5 +56,5 @@ which eza &> /dev/null && alias el='eza -B --group --time-style long-iso --group
 which exa &> /dev/null && alias el='exa -B --group --time-style long-iso --group-directories-first'
 alias | grep ^el &> /dev/null &&  alias l='el -l --icons'
 which paru &> /dev/null && alias pr='paru -Syyu --skipreview'
-which cloc &> /dev/null && alias git-cloc='git ls-files | cloc --list-file=-'
+which cloc &> /dev/null && alias git-cloc='git lsquoted | cloc --list-file=-'
 
