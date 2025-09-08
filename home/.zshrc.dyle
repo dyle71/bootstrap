@@ -1,6 +1,16 @@
 # ------------------------------------------------------------
 # Dyle .zshrc settings
 
+goEnv() {
+  if ( test -x "$(which go 2> /dev/null)"); then
+    mkdir -p ~/.local/share/go ~/.local/bin ~/.cache/go/mod ~/.cache/go/build &> /dev/null
+    go env -w GOPATH="$HOME/.local/share/go"
+    go env -w GOBIN="$HOME/.local/bin"
+    go env -w GOMODCACHE="$HOME/.cache/go/mod"
+    go env -w GOCACHE="$HOME/.cache/go/build"
+  fi
+}
+
 export EDITOR="nvim"
 export TERM=xterm-256color
 export GPG_TTY=$(tty)
@@ -46,6 +56,8 @@ bindkey "^[[B" down-line-or-search
 # Load nvm - Node Version Manage
 export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+goEnv
 
 typeset -U path PATH
 path=(~/Applications ~/.local/bin ~/.bun/bin $path)
