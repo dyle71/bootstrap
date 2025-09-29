@@ -49,3 +49,9 @@ echo "git clone --depth 1 -- https://github.com/marlonrichert/zsh-snap.git ${ZNA
 git clone --depth=1 https://github.com/marlonrichert/zsh-snap.git ${ZNAP_REPOS}/znap
 
 ./link-config.sh
+
+if [[ -x $(which gsettings)) ]]; then
+  gsettings set org.gtk.Settings.FileChooser sort-directories-first true
+  gsettings set org.gtk.Settings.FileChooser sort-column 'name'
+  gsettings set org.gtk.Settings.FileChooser sort-order 'ascending'
+fi
