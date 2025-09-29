@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+if [[ -x /usr/bin/steam ]]; then
+  sleep 3
+  /usr/bin/steam -silent
+fi
+
