@@ -1,0 +1,7 @@
+#!/bin/sh
+
+git config user.name "Oliver Maurhart"
+git config user.email "dyle71@gmail.com"
+git config user.signingkey 025EFE89701E9C17
+git config commit.gpgSign true
+git config tag.gpgSign true
