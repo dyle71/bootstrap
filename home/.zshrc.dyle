@@ -59,6 +59,9 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 
 goEnv
 
+# Electron has some bugs when not detecting wayland properly
+ELECTRON_OZONE_PLATFORM_HINT=wayland
+
 typeset -U path PATH
 path=(~/Applications ~/.local/bin ~/.bun/bin $path)
 
