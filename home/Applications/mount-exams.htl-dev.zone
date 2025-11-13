@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+sshfs mao@exams.htl-dev.zone:/ Mounts/exams.htl-dev.zone
