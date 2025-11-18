@@ -72,4 +72,5 @@ which exa &> /dev/null && alias el='exa -B --group --time-style long-iso --group
 alias | grep ^el &> /dev/null &&  alias l='el -l --icons'
 which paru &> /dev/null && alias pr='paru -Syyu --skipreview'
 which cloc &> /dev/null && alias git-cloc='git lsquoted | cloc --list-file=-'
+alias v='nvim'
 
