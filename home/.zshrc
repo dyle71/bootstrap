@@ -18,3 +18,11 @@ znap prompt romkatv/powerlevel10k
 
 [[ ! -f ~/.zshrc.dyle ]] || source ~/.zshrc.dyle
 
+
+# pnpm
+export PNPM_HOME="/home/dyle/.local/share/pnpm"
+case ":$PATH:" in
+  *":$PNPM_HOME:"*) ;;
+  *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+# pnpm end
