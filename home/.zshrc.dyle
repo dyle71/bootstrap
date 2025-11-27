@@ -63,6 +63,7 @@ goEnv
 export ELECTRON_OZONE_PLATFORM_HINT=wayland
 
 export AGE_IDENTITIES_FILE="$HOME/.config/age/keys.txt"
+export AGE_PUBLIC_IDENTITY="age1qvvkqq4fgtm9xxgjjehjz9p08sgm26cvl2yqqj70mcm7e6ltmqss7n4hgw"
 
 typeset -U path PATH
 path=(~/Applications ~/.local/bin ~/.bun/bin $path)
@@ -75,4 +76,5 @@ alias | grep ^el &> /dev/null &&  alias l='el -l --icons'
 which paru &> /dev/null && alias pr='paru -Syyu --skipreview'
 which cloc &> /dev/null && alias git-cloc='git lsquoted | cloc --list-file=-'
 alias v='nvim'
-
+alias age-e='age -r ${AGE_PUBLIC_IDENTITY} -a -e'
+alias age-d='age -i ${AGE_IDENTITIES_FILE} -d'
