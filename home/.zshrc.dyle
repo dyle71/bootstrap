@@ -62,6 +62,8 @@ goEnv
 # Electron has some bugs when not detecting wayland properly
 export ELECTRON_OZONE_PLATFORM_HINT=wayland
 
+export AGE_IDENTITIES_FILE="$HOME/.config/age/keys.txt"
+
 typeset -U path PATH
 path=(~/Applications ~/.local/bin ~/.bun/bin $path)
 
