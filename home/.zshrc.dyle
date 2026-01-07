@@ -80,3 +80,4 @@ which cloc &> /dev/null && alias git-cloc='git lsquoted | cloc --list-file=-'
 alias b='bat'
 alias vim='nvim'
 alias v='nvim'
+
