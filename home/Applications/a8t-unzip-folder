@@ -1,0 +1,95 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+FOLDER=""
+SCRIPT_NAME="$(basename -- "$0")"
+
+# ------------------------------------------------------------
+# Arguments and options
+
+usage() {
+  cat << EOF
+Usage:
+  $SCRIPT_NAME --folder <path>
+  $SCRIPT_NAME -f <path>
+
+Options:
+  -f, --folder <path>   Folder path (required)
+  -h, --help            Show this help and exit
+
+Examples:
+  $SCRIPT_NAME --folder ./data
+  $SCRIPT_NAME -f /tmp/mydir
+EOF
+}
+
+die() {
+  local msg="$1"
+  local code="${2:-1}"
+  printf 'Error: %s\n\n' "$msg" >&2
+  usage >&2
+  exit "$code"
+}
+
+if [[ $# -eq 0 ]]; then
+  die "Missing required argument --folder" 2
+fi
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    -f|--folder)
+      shift
+      [[ $# -gt 0 ]] || die "Option --folder requires a value" 2
+      FOLDER="$1"
+      ;;
+    --folder=*)
+      FOLDER="${1#*=}"
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      die "Unknown option: $1" 2
+      ;;
+    *)
+      die "Unexpected positional argument: $1" 2
+      ;;
+  esac
+  shift
+done
+
+[[ -n "$FOLDER" ]] || die "Missing required argument --folder" 2
+if [[ ! -e "$FOLDER" ]]; then
+  die "Folder does not exist: $FOLDER" 3
+fi
+if [[ ! -d "$FOLDER" ]]; then
+  die "Path is not a directory: $FOLDER" 3
+fi
+[[ -r "$FOLDER" ]] || die "Folder is not readable: $FOLDER" 3
+[[ -w "$FOLDER" ]] || die "Folder is not writable: $FOLDER" 3
+
+FOLDER=$(readlink -f $FOLDER)
+
+# ------------------------------------------------------------
+# Main
+
+cd $FOLDER
+
+for ZIP_FILE in *.zip; do
+
+  echo "Working on $ZIP_FILE"
+  ZIP_FOLDER="${ZIP_FILE%.*}"
+  mkdir -p "$ZIP_FOLDER"
+  (
+    cd $ZIP_FOLDER
+    rm -rf * *.* .*
+    unzip -qq ../$ZIP_FILE 
+    npm install
+  )
+done
+
