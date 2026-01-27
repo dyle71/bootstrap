@@ -1,0 +1,76 @@
+#!/usr/bin/env bun
+
+import { parseArgs } from "util";
+
+const { values, positionals } = parseArgs({
+  args: Bun.argv,
+  options: {
+    url: { type: "string", short: "u", default: "http://localhost:1337" },
+    token: { type: "string", short: "t" },
+    out: { type: "string", short: "o", default: "export.csv" },
+    help: { type: "boolean" }
+  },
+  strict: true,
+  allowPositionals: true,
+});
+
+const { token, help } = values;
+if (help) {
+  console.log("fetch-json-2-csv [OPTIONS] URL FILE");
+  console.log();
+  console.log("OPTIONS:");
+  console.log("  --token, -t: Provide a Bearer token for authentication");
+  console.log();
+  console.log("URL: The URL returning to access.");
+  console.log("FILE: The CSV file to write.");
+  process.exit(0);
+}
+
+if (positionals.length != 4) {
+  console.error("❌ Error: Please specify URL and FILE.");
+  console.error("Type --help for help.");
+  process.exit(1);
+}
+
+const url = positionals[2];
+const out = positionals[3];
+
+async function exportStrapiToCSV() {
+  console.log(`🚀 Starting export ...`);
+
+  try {
+    const response = await fetch(`${url}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP Error: ${response.status}`);
+    }
+
+    const body = await response.json();
+    const data = body.data;
+
+    if (!data || data.length === 0) {
+      console.warn("⚠️ no data found.");
+      return;
+    }
+
+    const rows = data;
+    const headers = Object.keys(rows[0]);
+    const csvContent = [
+      headers.join(","), // Header-Zeile
+      ...rows.map(row => 
+        headers.map(fieldName => JSON.stringify(row[fieldName] ?? "")).join(",")
+      )
+    ].join("\n");
+
+    await Bun.write(out, csvContent);
+    console.log(`✅ Success! File saved as: ${out}`);
+
+  } catch (error) {
+    console.error("❌ Export failed:", error.message);
+  }
+}
+
+exportStrapiToCSV();
+
