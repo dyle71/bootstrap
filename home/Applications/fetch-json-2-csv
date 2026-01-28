@@ -5,9 +5,7 @@ import { parseArgs } from "util";
 const { values, positionals } = parseArgs({
   args: Bun.argv,
   options: {
-    url: { type: "string", short: "u", default: "http://localhost:1337" },
     token: { type: "string", short: "t" },
-    out: { type: "string", short: "o", default: "export.csv" },
     help: { type: "boolean" }
   },
   strict: true,
@@ -55,14 +53,9 @@ async function exportStrapiToCSV() {
       return;
     }
 
-    const rows = data;
-    const headers = Object.keys(rows[0]);
-    const csvContent = [
-      headers.join(","), // Header-Zeile
-      ...rows.map(row => 
-        headers.map(fieldName => JSON.stringify(row[fieldName] ?? "")).join(",")
-      )
-    ].join("\n");
+    const headers = Object.keys(data[0]);
+    const rows = data.map(row => headers.map(fieldName => JSON.stringify(row[fieldName] ?? "")).join(","));
+    const csvContent = [headers.join(","), ...rows].join("\n");
 
     await Bun.write(out, csvContent);
     console.log(`✅ Success! File saved as: ${out}`);
