@@ -2,6 +2,7 @@
 
 REMOTE="OneDrive HTL Villach:"
 LOCAL="$HOME/Documents/Cloud/mao@htl-villach.at/OneDrive"
+OPTIONS="--progress --update --use-server-modtime --transfers 8 --metadata"
 
 mkdir -p "$LOCAL" &> /dev/null
 if [[ $? != 0 ]]; then
@@ -9,10 +10,10 @@ if [[ $? != 0 ]]; then
   exit 1
 fi
 
-rclone sync "$REMOTE" "$LOCAL" --progress
+rclone sync "$REMOTE" "$LOCAL" $OPTIONS
 
 while inotifywait -r -e modify,create,delete,move "$LOCAL"; do
   sleep 5
-  rclone sync "$LOCAL" "$REMOTE"
+  rclone sync "$LOCAL" "$REMOTE" $OPTIONS
 done
 
