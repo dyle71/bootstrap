@@ -1,0 +1,11 @@
+[Unit]
+Description=Realtime Sync HTL-Villach
+After=network-online.target
+
+[Service]
+ExecStart=/home/dyle/Applications/sync-onedrive
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
