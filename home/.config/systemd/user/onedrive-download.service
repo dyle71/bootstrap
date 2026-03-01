@@ -4,4 +4,4 @@ After=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/rclone sync "OneDrive HTL Villach:" "/home/dyle/Documents/Cloud/mao@htl-villach.at/OneDrive" 
+ExecStart=/usr/bin/rclone sync "OneDrive HTL Villach:" "/home/dyle/Documents/Cloud/mao@htl-villach.at/OneDrive" --update --use-server-modtime --progress
