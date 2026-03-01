@@ -1,0 +1,18 @@
+#!/bin/bash
+
+REMOTE="OneDrive HTL Villach:"
+LOCAL="$HOME/Documents/Cloud/mao@htl-villach.at/OneDrive"
+
+mkdir -p "$LOCAL" &> /dev/null
+if [[ $? != 0 ]]; then
+  echo "Failed to create sync folder: $LOCAL"
+  exit 1
+fi
+
+rclone sync "$REMOTE" "$LOCAL" --progress
+
+while inotifywait -r -e modify,create,delete,move "$LOCAL"; do
+  sleep 5
+  rclone sync "$LOCAL" "$REMOTE"
+done
+
