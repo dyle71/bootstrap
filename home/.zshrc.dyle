@@ -59,8 +59,11 @@ export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || pr
 
 goEnv
 
-# Electron has some bugs when not detecting wayland properly
+# Electron has some bugs when not detecting Wayland properly
 export ELECTRON_OZONE_PLATFORM_HINT=wayland
+
+# Mozilla Tunderbird has some bugs when not detecting Wayland properly
+MOZ_ENABLE_WAYLAND=1
 
 export AGE_IDENTITIES_FILE="$HOME/.config/age/keys.txt"
 export AGE_PUBLIC_IDENTITY="age1qvvkqq4fgtm9xxgjjehjz9p08sgm26cvl2yqqj70mcm7e6ltmqss7n4hgw"
