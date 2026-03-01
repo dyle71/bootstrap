@@ -1,0 +1,15 @@
+#!/bin/bash
+
+REMOTE="OneDrive HTL Villach:"
+LOCAL="$HOME/Documents/Cloud/mao@htl-villach.at/OneDrive"
+OPTIONS="--progress --update --use-server-modtime --transfers 8 --metadata"
+
+mkdir -p "$LOCAL" &> /dev/null
+if [[ $? != 0 ]]; then
+  echo "Failed to create sync folder: $LOCAL"
+  exit 1
+fi
+
+rclone sync "$REMOTE" "$LOCAL" $OPTIONS
+rclone sync "$LOCAL" "$REMOTE" $OPTIONS
+
