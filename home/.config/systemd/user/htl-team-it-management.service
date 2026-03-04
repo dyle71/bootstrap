@@ -1,0 +1,20 @@
+[Unit]
+Description=Mount of Documents of "IT-Management" Team
+After=network-online.target
+
+[Service]
+Type=notify
+ExecStart=/usr/bin/rclone mount "Team - IT-Management:" "/home/dyle/Documents/Cloud/mao@htl-villach.at/Teams/IT-Management/" \
+  --vfs-cache-mode writes \
+  --vfs-cache-max-age 24h \
+  --vfs-cache-max-size 20G \
+  --dir-cache-time 1h \
+  --vfs-fast-fingerprint \
+  --no-modtime \
+  --header "Referer:"
+ExecStop=/bin/fusermount -u "/home/dyle/Documents/Cloud/mao@htl-villach.at/Teams/IT-Management"
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+
