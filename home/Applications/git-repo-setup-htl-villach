@@ -2,6 +2,6 @@
 
 git config user.name "Oliver Maurhart"
 git config user.email "oliver.maurhart@htl-villach.at"
-git config user.signingkey 9D0DC2A3AF5BEF7C
+git config user.signingkey ~/.ssh/id_rsa
 git config commit.gpgSign true
 git config tag.gpgSign true

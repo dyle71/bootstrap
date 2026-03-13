@@ -17,6 +17,7 @@
     pr = remote prune origin
 
 [user]
+	signingkey = /home/dyle/.ssh/id_rsa
 #    email = 
 #    name = 
 
@@ -44,6 +45,7 @@
 
 [init]
 	defaultBranch = main
+
 [maintenance]
 	repo = /usr/local/src/znap-repos/znap
 	repo = /home/dyle/.znap-repos/znap
@@ -52,3 +54,9 @@
 	repo = /home/dyle/.znap-repos/zsh-users/zsh-autosuggestions
 	repo = /home/dyle/.znap-repos/zsh-users/zsh-completions
 	repo = /home/dyle/.znap-repos/zsh-users/zsh-syntax-highlighting
+
+[gpg]
+	format = ssh
+
+[commit]
+	gpgsign = true
