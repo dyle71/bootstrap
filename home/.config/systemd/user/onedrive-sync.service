@@ -3,7 +3,7 @@ Description=Realtime Sync HTL-Villach
 After=network-online.target
 
 [Service]
-ExecStart=/home/dyle/Applications/sync-onedrive
+ExecStart=%h/Applications/sync-onedrive
 Restart=on-failure
 RestartSec=10
 
