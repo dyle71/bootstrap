@@ -4,7 +4,7 @@
 # Files are copied (not symlinked) so the bootstrap dir can be removed afterwards.
 set -e
 
-BOOTSTRAP_DIR="${1:-$(dirname "$(readlink -f "$0")")"}"
+BOOTSTRAP_DIR="${1:-$(dirname "$(readlink -f "$0")")}"
 
 command -v nvim > /dev/null 2>&1 || { echo "ERROR: neovim is not installed" >&2; exit 1; }
 
