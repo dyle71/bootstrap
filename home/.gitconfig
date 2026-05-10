@@ -45,13 +45,13 @@
   defaultBranch = main
 
 [maintenance]
-    repo = /usr/local/src/znap-repos/znap
-    repo = ~/.znap-repos/znap
-    repo = ~/.znap-repos/ael-code/zsh-colored-man-pages
-    repo = ~/.znap-repos/romkatv/powerlevel10k
-    repo = ~/.znap-repos/zsh-users/zsh-autosuggestions
-    repo = ~/.znap-repos/zsh-users/zsh-completions
-    repo = ~/.znap-repos/zsh-users/zsh-syntax-highlighting
+  repo = /usr/local/src/znap-repos/znap
+  repo = ~/.znap-repos/znap
+  repo = ~/.znap-repos/ael-code/zsh-colored-man-pages
+  repo = ~/.znap-repos/romkatv/powerlevel10k
+  repo = ~/.znap-repos/zsh-users/zsh-autosuggestions
+  repo = ~/.znap-repos/zsh-users/zsh-completions
+  repo = ~/.znap-repos/zsh-users/zsh-syntax-highlighting
 
 [gpg]
   format = ssh
