@@ -4,7 +4,7 @@
 # Files are copied (not symlinked) so the bootstrap dir can be removed afterwards.
 set -e
 
-BOOTSTRAP_DIR="${1:-$(dirname "$(readlink -f "$0")")"}"
+BOOTSTRAP_DIR="${1:-$(dirname "$(readlink -f "$0")")}"
 
 [ -n "${HOME}" ] || { echo "ERROR: HOME not set" >&2; exit 1; }
 command -v zsh > /dev/null 2>&1 || { echo "ERROR: zsh is not installed" >&2; exit 1; }
