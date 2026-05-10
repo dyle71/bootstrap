@@ -30,6 +30,8 @@ After the script finishes, log out and back in (or run `exec zsh`).
 | RHEL         | 9, 10               |
 | Gentoo       | current             |
 | openSUSE     | Tumbleweed, Leap    |
+| Linux Mint   | 21.x, 22.x          |
+| Pop!\_OS     | 22.04, 24.04        |
 
 ## Installed packages
 

@@ -40,7 +40,7 @@ echo "Detected OS: ${PRETTY_NAME:-${ID} ${VERSION_ID}}"
 if ! command -v git > /dev/null 2>&1; then
     echo "git not found - installing..."
     case "${ID}" in
-        debian|ubuntu)
+        debian|ubuntu|linuxmint|pop)
             sudo apt-get update -q
             sudo apt-get install -y git
             ;;
@@ -101,6 +101,22 @@ case "${ID}" in
             24.04) DISTRO_SCRIPT="${WORK_DIR}/distro/install.ubuntu-24.04.sh" ;;
             26.04) DISTRO_SCRIPT="${WORK_DIR}/distro/install.ubuntu-26.04.sh" ;;
             *)     error "Unsupported Ubuntu version: ${VERSION_ID}" ;;
+        esac
+        ;;
+    linuxmint)
+        # Linux Mint 21.x is based on Ubuntu 22.04; 22.x on Ubuntu 24.04
+        case "${VERSION_ID}" in
+            21*) DISTRO_SCRIPT="${WORK_DIR}/distro/install.ubuntu-22.04.sh" ;;
+            22*) DISTRO_SCRIPT="${WORK_DIR}/distro/install.ubuntu-24.04.sh" ;;
+            *)   error "Unsupported Linux Mint version: ${VERSION_ID}" ;;
+        esac
+        ;;
+    pop)
+        # Pop!_OS version IDs mirror Ubuntu (22.04, 24.04, ...)
+        case "${VERSION_ID}" in
+            22.04) DISTRO_SCRIPT="${WORK_DIR}/distro/install.ubuntu-22.04.sh" ;;
+            24.04) DISTRO_SCRIPT="${WORK_DIR}/distro/install.ubuntu-24.04.sh" ;;
+            *)     error "Unsupported Pop!_OS version: ${VERSION_ID}" ;;
         esac
         ;;
     arch)
