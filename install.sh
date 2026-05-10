@@ -54,6 +54,15 @@ if ! command -v git > /dev/null 2>&1; then
                 sudo apk add --no-cache git
             fi
             ;;
+        fedora|rhel)
+            sudo dnf install -y git
+            ;;
+        gentoo)
+            sudo emerge --quiet dev-vcs/git
+            ;;
+        opensuse-tumbleweed|opensuse-leap|opensuse)
+            sudo zypper --non-interactive install git
+            ;;
         *)
             error "Cannot install git on unsupported OS '${ID}'."
             ;;
@@ -99,6 +108,18 @@ case "${ID}" in
         ;;
     alpine)
         DISTRO_SCRIPT="${WORK_DIR}/distro/install.alpine.sh"
+        ;;
+    fedora)
+        DISTRO_SCRIPT="${WORK_DIR}/distro/install.fedora.sh"
+        ;;
+    rhel)
+        DISTRO_SCRIPT="${WORK_DIR}/distro/install.rhel.sh"
+        ;;
+    gentoo)
+        DISTRO_SCRIPT="${WORK_DIR}/distro/install.gentoo.sh"
+        ;;
+    opensuse-tumbleweed|opensuse-leap|opensuse)
+        DISTRO_SCRIPT="${WORK_DIR}/distro/install.opensuse.sh"
         ;;
     *)
         error "Unsupported OS: ${ID}"

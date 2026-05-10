@@ -26,6 +26,10 @@ After the script finishes, log out and back in (or run `exec zsh`).
 | Ubuntu       | 22.04, 24.04, 26.04 |
 | Arch Linux   | current             |
 | Alpine Linux | current             |
+| Fedora       | current             |
+| RHEL         | 9, 10               |
+| Gentoo       | current             |
+| openSUSE     | Tumbleweed, Leap    |
 
 ## Installed packages
 
@@ -40,8 +44,13 @@ distro/
   install.debian-13.sh
   install.ubuntu-22.04.sh
   install.ubuntu-24.04.sh
+  install.ubuntu-26.04.sh
   install.arch.sh
   install.alpine.sh
+  install.fedora.sh
+  install.rhel.sh
+  install.gentoo.sh
+  install.opensuse.sh
 setup-zsh.sh        # Install znap, Powerlevel10k and copy dotfiles
 setup-nvim.sh       # Copy NvChad config and run initial plugin sync
 home/               # Dotfiles and config files
