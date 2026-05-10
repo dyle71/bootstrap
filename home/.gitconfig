@@ -1,62 +1,60 @@
 # private gitconfig of dyle --> copy to ~/.gitconfig
 
 [alias]
-    co = checkout
-    conflict = diff --name-only --diff-filter=U
-    ci = commit
-    st = status
-    br = branch
-    hist = log --branches --remotes --tags --graph --oneline --decorate
-    type = cat-file -t
-    dump = cat-file -p
-    ls = ls-files
-    lg = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)%ai (%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)'
-    lga = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)%ai (%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)' --all
-    rev = rev-parse --short HEAD
-    lsquoted = "!f() { git -C \"$(git rev-parse --show-toplevel)\" ls-files -z | xargs -0 -n1 printf '%q\\n'; }; f"
-    pr = remote prune origin
+  co = checkout
+  conflict = diff --name-only --diff-filter=U
+  ci = commit
+  st = status
+  br = branch
+  hist = log --branches --remotes --tags --graph --oneline --decorate
+  type = cat-file -t
+  dump = cat-file -p
+  ls = ls-files
+  lg = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)%ai (%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)'
+  lga = log --graph --abbrev-commit --decorate --format=format:'%C(bold blue)%h%C(reset) - %C(bold green)%ai (%ar)%C(reset) %C(white)%s%C(reset) %C(dim white)- %an%C(reset)%C(auto)%d%C(reset)' --all
+  rev = rev-parse --short HEAD
+  lsquoted = "!f() { git -C \"$(git rev-parse --show-toplevel)\" ls-files -z | xargs -0 -n1 printf '%q\\n'; }; f"
+  pr = remote prune origin
 
 [user]
-	signingkey = /home/dyle/.ssh/id_rsa
-#    email = 
-#    name = 
+  signingkey = ~/.ssh/id_rsa
 
 [color]
-    branch = auto
-    diff = auto
-    grep = auto
-    interactive = auto
-    pager = true
-    status = auto
-    ui = auto
+  branch = auto
+  diff = auto
+  grep = auto
+  interactive = auto
+  pager = true
+  status = auto
+  ui = auto
 
 [pull]
-    rebase = true
+  rebase = true
 
 [core]
-    pager = bat --theme Dracula --style=changes
-    autocrlf = input
+  pager = sh -c 'command -v bat >/dev/null 2>&1 && exec bat --theme Dracula --style=changes || exec less -FRX'
+  autocrlf = input
 
 [filter "lfs"]
-    clean = git-lfs clean -- %f
-    smudge = git-lfs smudge -- %f
-    process = git-lfs filter-process
-    required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
+  required = true
 
 [init]
-	defaultBranch = main
+  defaultBranch = main
 
 [maintenance]
-	repo = /usr/local/src/znap-repos/znap
-	repo = /home/dyle/.znap-repos/znap
-	repo = /home/dyle/.znap-repos/ael-code/zsh-colored-man-pages
-	repo = /home/dyle/.znap-repos/romkatv/powerlevel10k
-	repo = /home/dyle/.znap-repos/zsh-users/zsh-autosuggestions
-	repo = /home/dyle/.znap-repos/zsh-users/zsh-completions
-	repo = /home/dyle/.znap-repos/zsh-users/zsh-syntax-highlighting
+    repo = /usr/local/src/znap-repos/znap
+    repo = ~/.znap-repos/znap
+    repo = ~/.znap-repos/ael-code/zsh-colored-man-pages
+    repo = ~/.znap-repos/romkatv/powerlevel10k
+    repo = ~/.znap-repos/zsh-users/zsh-autosuggestions
+    repo = ~/.znap-repos/zsh-users/zsh-completions
+    repo = ~/.znap-repos/zsh-users/zsh-syntax-highlighting
 
 [gpg]
-	format = ssh
+  format = ssh
 
 [commit]
-	gpgsign = true
+  gpgsign = true
