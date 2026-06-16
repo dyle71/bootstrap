@@ -68,9 +68,6 @@ export MOZ_ENABLE_WAYLAND=1
 export AGE_IDENTITIES_FILE="$HOME/.config/age/keys.txt"
 export AGE_PUBLIC_IDENTITY="age1qvvkqq4fgtm9xxgjjehjz9p08sgm26cvl2yqqj70mcm7e6ltmqss7n4hgw"
 
-# In Wayland, the clipboard is window app space not system space.
-command -v wl-clip-persist &>/dev/null && wl-clip-persist --clipboard regular &
-
 typeset -U path PATH
 path=(~/Applications ~/.local/bin ~/.bun/bin $path)
 
