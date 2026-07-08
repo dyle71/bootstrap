@@ -1,11 +1,17 @@
 [Unit]
-Description=Realtime Sync HTL-Villach
+Description=OneDrive bisync HTL-Villach
 After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=300
+StartLimitBurst=3
 
 [Service]
-ExecStart=%h/Applications/sync-onedrive
-Restart=on-failure
-RestartSec=10
+ExecStart=/home/dyle/Applications/sync-onedrive
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=onedrive-sync
 
 [Install]
 WantedBy=default.target

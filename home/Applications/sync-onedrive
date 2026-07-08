@@ -1,19 +1,280 @@
-#!/bin/bash
+#!/usr/bin/env python3
+"""
+sync-onedrive – bidirectional rclone bisync daemon for OneDrive.
 
-REMOTE="OneDrive HTL Villach:"
-LOCAL="$HOME/Documents/Cloud/mao@htl-villach.at/OneDrive"
-OPTIONS="--progress --update --use-server-modtime --transfers 8 --metadata"
+Modes:
+  (no args)  Daemon mode: initial sync, then watch local changes via watchdog
+             and poll remote every REMOTE_POLL seconds.
+  --once     One-shot mode: run a single bisync and exit (used by systemd timer).
+"""
 
-mkdir -p "$LOCAL" &> /dev/null
-if [[ $? != 0 ]]; then
-  echo "Failed to create sync folder: $LOCAL"
-  exit 1
-fi
+import argparse
+import json
+import logging
+import os
+import signal
+import subprocess
+import sys
+import threading
+import time
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
-rclone sync "$REMOTE" "$LOCAL" $OPTIONS
+from watchdog.events import FileSystemEventHandler
+from watchdog.observers import Observer
 
-while inotifywait -r -e modify,create,delete,move "$LOCAL"; do
-  sleep 5
-  rclone sync "$LOCAL" "$REMOTE" $OPTIONS
-done
+# ── Configuration ─────────────────────────────────────────────────────────────
 
+REMOTE       = "OneDrive HTL Villach:"
+LOCAL        = Path.home() / "Documents/Cloud/mao@htl-villach.at/OneDrive"
+LISTINGS_DIR = Path.home() / ".cache/rclone/bisync"
+LST_BASE     = "OneDrive_HTL_Villach_..home_dyle_Documents_Cloud_mao@htl-villach.at_OneDrive"
+LOGFILE      = Path.home() / ".local/share/rclone/onedrive-sync.log"
+
+DEBOUNCE     = 1.0  # seconds to wait after a local change before syncing
+REMOTE_POLL  = 30   # seconds between remote polls
+LOG_MAX      = 5 * 1024 * 1024  # 5 MB per log file
+LOG_BACKUPS  = 2
+
+BISYNC_OPTS = [
+    "--use-server-modtime",
+    "--transfers", "8",
+    "--metadata",
+    "--conflict-resolve", "newer",
+    "--conflict-loser", "num",
+    "--verbose",
+]
+
+EXCLUDE_PATTERNS = [
+    r"\.~lock\.",
+    r"~\$",
+    r"\.git",
+    r"\.tmp$",
+]
+
+# ── Logging ───────────────────────────────────────────────────────────────────
+
+def setup_logging() -> logging.Logger:
+    LOGFILE.parent.mkdir(parents=True, exist_ok=True)
+
+    fmt = logging.Formatter(fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+
+    file_handler = RotatingFileHandler(LOGFILE, maxBytes=LOG_MAX, backupCount=LOG_BACKUPS, encoding="utf-8")
+    file_handler.setFormatter(fmt)
+
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(fmt)
+
+    logger = logging.getLogger("onedrive-sync")
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
+
+    return logger
+
+
+log = setup_logging()
+
+# ── Desktop notifications ─────────────────────────────────────────────────────
+
+def notify(summary: str, body: str = "", urgency: str = "low", icon: str = ""):
+    """Send a desktop notification via notify-send (best-effort, never raises)."""
+    try:
+        cmd = ["notify-send", "-u", urgency]
+
+        if icon:
+            cmd += ["-i", icon]
+        cmd += [summary]
+
+        if body:
+            cmd.append(body)
+
+        subprocess.run(cmd, check=False, timeout=5)
+
+    except Exception:
+        pass
+
+# ── Lock / Listings helpers ───────────────────────────────────────────────────
+
+def listings_ok() -> bool:
+    return ((LISTINGS_DIR / f"{LST_BASE}.path1.lst").exists() and (LISTINGS_DIR / f"{LST_BASE}.path2.lst").exists())
+
+
+def cleanup_stale_rclone_lock() -> bool:
+    """
+    Remove a stale bisync lock file left behind by a previously killed process.
+
+    rclone bisync writes a JSON lock file containing the PID of the owner.
+    Returns True if it is safe to proceed, False if a live lock is held.
+    """
+    lck = LISTINGS_DIR / f"{LST_BASE}.lck"
+    if not lck.exists():
+        return True
+
+    try:
+        data = json.loads(lck.read_text())
+        pid = int(data["PID"])
+    except Exception as exc:
+        log.warning("Could not parse bisync lock file (%s) – leaving it alone", exc)
+        return False
+
+    # Check whether the owning process is still alive
+    try:
+        os.kill(pid, 0)
+        # Process is alive – a real bisync is running
+        log.warning("bisync lock held by running PID %d – skipping this run", pid)
+        return False
+    except ProcessLookupError:
+        pass  # PID is dead → stale lock
+    except PermissionError:
+        # PID exists but belongs to another user – treat as alive
+        log.warning("bisync lock held by PID %d (no permission to signal) – skipping", pid)
+        return False
+
+    log.warning("Stale bisync lock found (PID %d is dead) – removing", pid)
+    try:
+        subprocess.run(["rclone", "deletefile", str(lck)], check=False, timeout=15, capture_output=True)
+    except Exception:
+        lck.unlink(missing_ok=True)
+
+    return True
+
+# ── Bisync ────────────────────────────────────────────────────────────────────
+
+# Threading lock: ensures only one bisync runs at a time across all threads.
+_bisync_lock = threading.Lock()
+
+
+def do_bisync(reason: str = "manual") -> bool:
+    """
+    Run rclone bisync.  Automatically adds --resync when listings are missing.
+    Returns True on success, False on failure.
+    """
+    if not _bisync_lock.acquire(blocking=False):
+        log.debug("bisync already running – skipping (%s)", reason)
+        return True
+
+    try:
+        if not cleanup_stale_rclone_lock():
+            return False
+
+        opts = list(BISYNC_OPTS)
+        resync = False
+
+        if not listings_ok():
+            log.warning("Listings missing – adding --resync (reason: %s)", reason)
+            notify("OneDrive Sync", "Listings missing, starting resync...", urgency="normal", icon="dialog-warning")
+            opts.append("--resync")
+            resync = True
+
+        log.info("Starting bisync (reason: %s, resync: %s)", reason, resync)
+
+        cmd = ["rclone", "bisync", REMOTE, str(LOCAL)] + opts
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        output = result.stdout + result.stderr
+
+        # Log relevant lines only
+        for line in output.splitlines():
+            if any(kw in line for kw in ("Transferred", "Errors", "ERROR", "WARN", "copied", "deleted", "renamed")):
+                log.info("  %s", line.strip())
+
+        if result.returncode != 0:
+            log.error("bisync failed (rc=%d)", result.returncode)
+            notify("OneDrive Sync", f"Sync failed (rc={result.returncode})\njournalctl --user -u onedrive-sync", urgency="critical", icon="dialog-error")
+            return False
+
+        return True
+
+    finally:
+        _bisync_lock.release()
+
+# ── Watchdog (local changes) ──────────────────────────────────────────────────
+
+class ChangeHandler(FileSystemEventHandler):
+    """Debounced handler: waits DEBOUNCE seconds after the last event, then syncs."""
+
+    def __init__(self):
+        super().__init__()
+        self._timer: threading.Timer | None = None
+        self._timer_lock = threading.Lock()
+
+    def _should_ignore(self, path: str) -> bool:
+        import re
+        return any(re.search(pat, path) for pat in EXCLUDE_PATTERNS)
+
+    def on_any_event(self, event):
+        if event.is_directory:
+            return
+        if self._should_ignore(event.src_path):
+            return
+
+        with self._timer_lock:
+            if self._timer is not None:
+                self._timer.cancel()
+            self._timer = threading.Timer(DEBOUNCE, self._fire)
+            self._timer.daemon = True
+            self._timer.start()
+
+    def _fire(self):
+        with self._timer_lock:
+            self._timer = None
+        do_bisync("inotify")
+
+# ── Remote poll loop ──────────────────────────────────────────────────────────
+
+def remote_poll_loop(stop_event: threading.Event):
+    """Polls remote every REMOTE_POLL seconds until stop_event is set."""
+    while not stop_event.wait(timeout=REMOTE_POLL):
+        do_bisync("remote-poll")
+
+# ── Entry point ───────────────────────────────────────────────────────────────
+
+def main():
+    parser = argparse.ArgumentParser(description="rclone bisync daemon for OneDrive")
+    parser.add_argument("--once", action="store_true", help="Run a single bisync and exit (for use with systemd timer)")
+    args = parser.parse_args()
+
+    LOCAL.mkdir(parents=True, exist_ok=True)
+
+    if args.once:
+        success = do_bisync("periodic-timer")
+        sys.exit(0 if success else 1)
+
+    # ── Daemon mode ───────────────────────────────────────────────────────────
+
+    log.info("Starting OneDrive sync daemon (local: %s)", LOCAL)
+
+    # Initial sync on startup
+    do_bisync("startup")
+
+    # Start remote poll thread
+    stop_event = threading.Event()
+    poll_thread = threading.Thread(target=remote_poll_loop, args=(stop_event,), name="remote-poll", daemon=True, )
+    poll_thread.start()
+
+    # Start local filesystem watcher
+    handler = ChangeHandler()
+    observer = Observer()
+    observer.schedule(handler, str(LOCAL), recursive=True)
+    observer.start()
+    log.info("Watching %s for local changes (debounce: %ss)", LOCAL, DEBOUNCE)
+
+    # Graceful shutdown on SIGTERM / SIGINT
+    def shutdown(signum, _frame):
+        log.info("Received signal %d – shutting down", signum)
+        stop_event.set()
+        observer.stop()
+
+    signal.signal(signal.SIGTERM, shutdown)
+    signal.signal(signal.SIGINT, shutdown)
+
+    try:
+        observer.join()
+    finally:
+        stop_event.set()
+        poll_thread.join(timeout=5)
+        log.info("Shutdown complete")
+
+
+if __name__ == "__main__":
+    main()

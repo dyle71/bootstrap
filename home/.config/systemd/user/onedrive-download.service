@@ -1,7 +1,0 @@
-[Unit]
-Description=OneDrive Download Sync
-After=network-online.target
-
-[Service]
-Type=oneshot
-ExecStart=/usr/bin/rclone sync "OneDrive HTL Villach:" "%h/Documents/Cloud/mao@htl-villach.at/OneDrive" --update --use-server-modtime --progress

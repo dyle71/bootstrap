@@ -4,7 +4,7 @@ After=network-online.target
 
 [Service]
 Type=notify
-ExecStart=/usr/bin/rclone mount "Team - Lehrer IF MT:" "%h/Documents/Cloud/mao@htl-villach.at/Teams/Lehrer IF MT/" \
+ExecStart=/usr/bin/rclone mount "Teams - Lehrer IF MT:" "/home/dyle/Documents/Cloud/mao@htl-villach.at/Teams/Lehrer IF MT/" \
   --vfs-cache-mode writes \
   --vfs-cache-max-age 24h \
   --vfs-cache-max-size 20G \
@@ -12,7 +12,7 @@ ExecStart=/usr/bin/rclone mount "Team - Lehrer IF MT:" "%h/Documents/Cloud/mao@h
   --vfs-fast-fingerprint \
   --no-modtime \
   --header "Referer:"
-ExecStop=/bin/fusermount -u %h/Documents/Cloud/Teams
+ExecStop=/bin/fusermount -u "/home/dyle/Documents/Cloud/mao@htl-villach.at/Teams/Lehrer IF MT"
 Restart=on-failure
 
 [Install]

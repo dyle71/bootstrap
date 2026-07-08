@@ -1,0 +1,10 @@
+[Unit]
+Description=OneDrive bisync (periodic fallback)
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/dyle/Applications/sync-onedrive --once
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=onedrive-sync

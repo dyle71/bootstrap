@@ -14,7 +14,7 @@ This will:
 2. Install all required packages
 3. Set up zsh with Powerlevel10k
 4. Set up neovim with NvChad
-5. Install the systemd user units and enable the agentlytics timer
+5. Install and enable the systemd user units (rclone mounts, OneDrive sync, timers)
 6. Remove the temporary clone
 
 After the script finishes, log out and back in (or run `exec zsh`).
@@ -72,14 +72,24 @@ home/               # Dotfiles and config files
 ## systemd user units
 
 The `.service` and `.timer` files under `home/.config/systemd/user/` are
-copied to `~/.config/systemd/user/` by `setup-systemd.sh`. Only the
-`agentlytics.timer` (a daily collect job) is enabled automatically, together
-with `loginctl enable-linger` so the timers run without an active login
-session. Enable any of the other units yourself with:
+copied to `~/.config/systemd/user/` by `setup-systemd.sh`, which then enables
+every unit that has an `[Install]` section and runs `loginctl enable-linger`
+so they keep working without an active login session. These mirror the units
+running on the reference machine:
+
+- `htl-teams-it-management.service`, `htl-teams-lehrer-if-mt.service` — rclone mounts of the HTL Teams document libraries
+- `onedrive-sync.service` — continuous OneDrive bisync (via `~/Applications/sync-onedrive`)
+- `onedrive-periodic.service` + `.timer` — periodic bisync fallback
+- `rclone-token-refresh.service` + `.timer` — daily `rclone lsd` to keep the OAuth tokens fresh
+- `agentlytics.service` + `.timer` — daily agentlytics collect job
+
+Units that need rclone remotes configured will fail to *start* until that
+config exists; the mounts and syncs depend on the `OneDrive HTL Villach:`,
+`Teams - IT-Management:` and `Teams - Lehrer IF MT:` rclone remotes.
 
 ```sh
-systemctl --user enable --now <unit>   # e.g. onedrive-download.timer
-systemctl --user list-timers           # inspect scheduled timers
+systemctl --user list-timers                       # inspect scheduled timers
+journalctl --user -u onedrive-sync.service -n 50   # inspect a unit's log
 ```
 
 ## Running steps individually

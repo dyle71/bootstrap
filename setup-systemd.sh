@@ -1,10 +1,10 @@
 #!/bin/sh
 # Deploy the user systemd units shipped with this bootstrap repository into
-# ~/.config/systemd/user/ and enable the agentlytics timer.
+# ~/.config/systemd/user/ and enable them, mirroring the reference machine.
 #
-# systemd does not inherit your shell PATH, so the agentlytics service calls
-# bunx via its absolute path (%h/.bun/bin/bunx). enable-linger lets the user
-# units keep running without an active login session.
+# Every unit that carries an [Install] section is enabled (rclone mounts,
+# OneDrive sync, timers). enable-linger lets those units keep running without
+# an active login session.
 #
 # When called from install.sh the bootstrap directory is passed as $1.
 set -e
@@ -35,24 +35,28 @@ done
 # "curl | sh" run it may be missing - copy the files and bail out gracefully.
 if ! systemctl --user show-environment > /dev/null 2>&1; then
     echo "No user systemd session available - files copied only."
-    echo "Enable later with: systemctl --user enable --now agentlytics.timer"
+    echo "Enable later with: systemctl --user enable --now <unit>"
     exit 0
 fi
 
 systemctl --user daemon-reload
 
-# Keep user timers running without an active login session.
+# Keep user units running without an active login session.
 loginctl enable-linger "${TARGET_USER}" 2>/dev/null || true
 
-# Enable the agentlytics collect timer. The remaining user units (rclone
-# mounts, OneDrive sync) are left for you to enable as needed.
-if [ -e "${USER_SRC}/agentlytics.timer" ]; then
-    echo "Enabling agentlytics.timer ..."
-    systemctl --user enable --now agentlytics.timer || \
-        echo "WARNING: could not enable agentlytics.timer" >&2
-fi
+# Enable every unit that carries an [Install] section - this mirrors the set
+# enabled on the reference machine (rclone mounts, OneDrive sync, timers).
+# Oneshot services triggered by a timer have no [Install] and are pulled in by
+# their timer. A unit whose backing tool (e.g. rclone) is not configured yet
+# will fail to *start*; that is reported but does not abort the setup.
+for src in "${USER_SRC}"/*.service "${USER_SRC}"/*.timer; do
+    [ -e "${src}" ] || continue
+    grep -q '^\[Install\]' "${src}" || continue
+    name=$(basename "${src}")
+    echo "Enabling ${name} ..."
+    systemctl --user enable --now "${name}" || \
+        echo "WARNING: could not enable ${name}" >&2
+done
 
 echo ""
 echo "systemd setup complete."
-echo "Enable other user units as needed with:"
-echo "  systemctl --user enable --now <unit>"

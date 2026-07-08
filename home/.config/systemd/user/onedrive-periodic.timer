@@ -1,0 +1,11 @@
+[Unit]
+Description=OneDrive bisync periodic fallback timer
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=30min
+AccuracySec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

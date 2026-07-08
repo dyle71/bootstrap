@@ -1,0 +1,8 @@
+[Unit]
+Description=rclone Token Refresh for HTL Teams
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/rclone lsd "OneDrive HTL Villach:"
+ExecStart=/usr/bin/rclone lsd "Teams - Lehrer IF MT:"
+ExecStart=/usr/bin/rclone lsd "Teams - IT Management:"

@@ -11,7 +11,7 @@
 #   4. Runs the distro-specific package install script
 #   5. Sets up zsh with Powerlevel10k
 #   6. Sets up neovim with NvChad
-#   7. Installs the systemd user units (enables the agentlytics timer)
+#   7. Installs and enables the systemd user units (mounts, OneDrive sync, timers)
 #   8. Removes the temporary clone
 set -e
 
