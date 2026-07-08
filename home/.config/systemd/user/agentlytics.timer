@@ -1,0 +1,12 @@
+# User timer. Triggers agentlytics.service once per day; Persistent=true makes
+# systemd catch up a missed run after the machine was powered off.
+[Unit]
+Description=Agentlytics daily collect
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=15m
+
+[Install]
+WantedBy=timers.target

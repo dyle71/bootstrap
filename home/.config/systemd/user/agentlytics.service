@@ -1,0 +1,13 @@
+# User unit. Installed to ~/.config/systemd/user/ by setup-systemd.sh.
+[Unit]
+Description=Agentlytics Collect
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# systemd does not inherit your shell PATH, so use the absolute path to bunx.
+# %h expands to the user's home directory.
+ExecStart=%h/.bun/bin/bunx agentlytics --collect
+# optional, if the tool needs a working directory:
+# WorkingDirectory=%h/projekte/agentlytics

@@ -11,7 +11,8 @@
 #   4. Runs the distro-specific package install script
 #   5. Sets up zsh with Powerlevel10k
 #   6. Sets up neovim with NvChad
-#   7. Removes the temporary clone
+#   7. Installs the systemd user units (enables the agentlytics timer)
+#   8. Removes the temporary clone
 set -e
 
 REPO_URL="https://gitlab.com/dyle71/bootstrap.git"
@@ -147,16 +148,20 @@ esac
 # ---------------------------------------------------------------------------
 
 echo ""
-echo "=== Step 1/3: Installing packages for ${ID} ${VERSION_ID:-} ==="
+echo "=== Step 1/4: Installing packages for ${ID} ${VERSION_ID:-} ==="
 sh "${DISTRO_SCRIPT}"
 
 echo ""
-echo "=== Step 2/3: Setting up zsh ==="
+echo "=== Step 2/4: Setting up zsh ==="
 sh "${WORK_DIR}/setup-zsh.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 3/3: Setting up neovim ==="
+echo "=== Step 3/4: Setting up neovim ==="
 sh "${WORK_DIR}/setup-nvim.sh" "${WORK_DIR}"
+
+echo ""
+echo "=== Step 4/4: Setting up systemd user units ==="
+sh "${WORK_DIR}/setup-systemd.sh" "${WORK_DIR}"
 
 echo ""
 echo "========================================"

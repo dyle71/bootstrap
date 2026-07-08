@@ -14,7 +14,8 @@ This will:
 2. Install all required packages
 3. Set up zsh with Powerlevel10k
 4. Set up neovim with NvChad
-5. Remove the temporary clone
+5. Install the systemd user units and enable the agentlytics timer
+6. Remove the temporary clone
 
 After the script finishes, log out and back in (or run `exec zsh`).
 
@@ -55,6 +56,7 @@ distro/
   install.opensuse.sh
 setup-zsh.sh        # Install znap, Powerlevel10k and copy dotfiles
 setup-nvim.sh       # Copy NvChad config and run initial plugin sync
+setup-systemd.sh    # Install systemd user units and enable the agentlytics timer
 home/               # Dotfiles and config files
   .zshrc
   .zshrc.dyle
@@ -63,6 +65,21 @@ home/               # Dotfiles and config files
   .config/
     nvim/           # NvChad-based neovim config
     bat/
+    systemd/
+      user/         # systemd user units (services and timers)
+```
+
+## systemd user units
+
+The `.service` and `.timer` files under `home/.config/systemd/user/` are
+copied to `~/.config/systemd/user/` by `setup-systemd.sh`. Only the
+`agentlytics.timer` (a daily collect job) is enabled automatically, together
+with `loginctl enable-linger` so the timers run without an active login
+session. Enable any of the other units yourself with:
+
+```sh
+systemctl --user enable --now <unit>   # e.g. onedrive-download.timer
+systemctl --user list-timers           # inspect scheduled timers
 ```
 
 ## Running steps individually
@@ -72,6 +89,7 @@ home/               # Dotfiles and config files
 sh distro/install.debian-12.sh   # install packages
 sh setup-zsh.sh                  # configure zsh
 sh setup-nvim.sh                 # configure neovim
+sh setup-systemd.sh              # install systemd user units
 ```
 
 ---
