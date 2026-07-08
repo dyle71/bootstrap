@@ -1,0 +1,55 @@
+# sync-onedrive configuration
+#
+# Loaded from (first match wins):
+#   1. --config PATH
+#   2. $SYNC_ONEDRIVE_CONFIG
+#   3. ${XDG_CONFIG_HOME:-~/.config}/sync-onedrive/config.toml
+#
+# Paths may use ~ and $ENV_VAR. List remotes with `rclone listremotes`.
+
+[settings]
+# Where rclone bisync keeps its listing/state files.
+listings_dir  = "~/.cache/rclone/bisync"
+# Daemon log file (rotated).
+logfile       = "~/.local/share/rclone/onedrive-sync.log"
+
+debounce      = 1.0       # seconds to wait after a local change before syncing
+remote_poll   = 30        # seconds between remote polls
+token_refresh = 21600     # seconds between OAuth token refreshes (6h)
+log_max_bytes = 5242880   # 5 MB per log file
+log_backups   = 2
+
+# Flags passed to every `rclone bisync` invocation.
+bisync_opts = [
+    "--use-server-modtime",
+    "--transfers", "8",
+    "--metadata",
+    "--conflict-resolve", "newer",
+    "--conflict-loser", "num",
+    "--resilient",
+    "--recover",
+    "--max-lock", "15m",
+    "--verbose",
+]
+
+# Local paths matching any of these regexes are ignored by the watcher.
+# Single-quoted TOML strings are literal (no backslash escaping needed).
+exclude_patterns = ['\.~lock\.', '~\$', '\.git', '\.tmp$']
+
+# ── Sync pairs: one rclone remote ⇄ one local directory ─────────────────────
+# Add or remove [[pair]] blocks freely.
+
+[[pair]]
+name   = "OneDrive HTL Villach"
+remote = "OneDrive HTL Villach:"
+local  = "~/Documents/Cloud/mao@htl-villach.at/OneDrive"
+
+[[pair]]
+name   = "Teams – Lehrer IF MT"
+remote = "Teams - Lehrer IF MT:"
+local  = "~/Documents/Cloud/mao@htl-villach.at/Teams/Lehrer IF MT"
+
+[[pair]]
+name   = "Teams – IT-Management"
+remote = "Teams - IT-Management:"
+local  = "~/Documents/Cloud/mao@htl-villach.at/Teams/IT-Management"

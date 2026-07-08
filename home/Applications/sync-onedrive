@@ -1,79 +1,201 @@
 #!/usr/bin/env python3
 """
-sync-onedrive – bidirectional rclone bisync daemon for OneDrive.
+sync-onedrive - bidirectional rclone bisync daemon for multiple cloud remotes.
+
+Every setting lives in a TOML config file (see --config); nothing about the
+remotes, local paths, or directories is hardcoded here.  Each [[pair]] in the
+config couples one rclone remote with one local directory.  All pairs share a
+single global lock and are processed sequentially, so no two bisync runs ever
+overlap.
+
+Config is loaded from the first of:
+  1. --config PATH
+  2. $SYNC_ONEDRIVE_CONFIG
+  3. ${XDG_CONFIG_HOME:-~/.config}/sync-onedrive/config.toml
 
 Modes:
-  (no args)  Daemon mode: initial sync, then watch local changes via watchdog
-             and poll remote every REMOTE_POLL seconds.
-  --once     One-shot mode: run a single bisync and exit (used by systemd timer).
+  (no args)     Daemon: initial sync of all pairs, then watch each local dir
+                for changes and poll all remotes every remote_poll seconds.
+                A background loop refreshes the OAuth tokens periodically.
+  --once        One-shot: bisync every pair once and exit with an aggregated
+                exit code (0 = all succeeded).  Used by the systemd timer.
+  --resync      Establish the bisync baseline.  Without further options it only
+                touches pairs that have no listings yet (safe first run);
+                --pair NAME targets one pair, --force re-baselines every pair.
+                A resync establishes the baseline WITHOUT transferring identical
+                files, but it is destructive on conflicts - hence never automatic.
+  --list        Print the configured pairs and their init status, then exit.
+
+Design notes / intentional behavior:
+  * Missing listings are a HARD failure in normal runs.  The daemon refuses to
+    sync and notifies once instead of silently resyncing - a wiped listings dir
+    must never trigger an unattended --resync.  Recover explicitly with --resync.
+  * rclone's own crash resilience is delegated to --resilient/--recover/--max-lock.
 """
 
 import argparse
 import json
 import logging
 import os
+import re
 import signal
 import subprocess
 import sys
 import threading
-import time
+import tomllib
+from dataclasses import dataclass, field
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
 from watchdog.events import FileSystemEventHandler
 from watchdog.observers import Observer
 
-# ── Configuration ─────────────────────────────────────────────────────────────
+# ── Config model ──────────────────────────────────────────────────────────────
 
-REMOTE       = "OneDrive HTL Villach:"
-LOCAL        = Path.home() / "Documents/Cloud/mao@htl-villach.at/OneDrive"
-LISTINGS_DIR = Path.home() / ".cache/rclone/bisync"
-LST_BASE     = "OneDrive_HTL_Villach_..home_dyle_Documents_Cloud_mao@htl-villach.at_OneDrive"
-LOGFILE      = Path.home() / ".local/share/rclone/onedrive-sync.log"
+DEFAULT_SETTINGS = {
+    "listings_dir":  "~/.cache/rclone/bisync",
+    "logfile":       "~/.local/share/rclone/onedrive-sync.log",
+    "debounce":      1.0,
+    "remote_poll":   30,
+    "token_refresh": 6 * 3600,
+    "log_max_bytes": 5 * 1024 * 1024,
+    "log_backups":   2,
+    "bisync_opts": [
+        "--use-server-modtime",
+        "--transfers", "8",
+        "--metadata",
+        "--conflict-resolve", "newer",
+        "--conflict-loser", "num",
+        "--resilient",
+        "--recover",
+        "--max-lock", "15m",
+        "--verbose",
+    ],
+    "exclude_patterns": [r"\.~lock\.", r"~\$", r"\.git", r"\.tmp$"],
+}
 
-DEBOUNCE     = 1.0  # seconds to wait after a local change before syncing
-REMOTE_POLL  = 30   # seconds between remote polls
-LOG_MAX      = 5 * 1024 * 1024  # 5 MB per log file
-LOG_BACKUPS  = 2
 
-BISYNC_OPTS = [
-    "--use-server-modtime",
-    "--transfers", "8",
-    "--metadata",
-    "--conflict-resolve", "newer",
-    "--conflict-loser", "num",
-    "--verbose",
-]
+@dataclass
+class Pair:
+    """One remote <-> local-directory sync relationship."""
+    name:   str    # human label used in logs and notifications
+    remote: str    # rclone remote, e.g. "OneDrive HTL Villach:"
+    local:  Path   # local directory
+    # per-pair debounce state (daemon mode); not part of the config
+    _timer: "threading.Timer | None" = field(default=None, repr=False, compare=False)
+    _timer_lock: threading.Lock = field(default_factory=threading.Lock, repr=False, compare=False)
 
-EXCLUDE_PATTERNS = [
-    r"\.~lock\.",
-    r"~\$",
-    r"\.git",
-    r"\.tmp$",
-]
+    @property
+    def session(self) -> str:
+        """rclone bisync session/listing base name for this pair."""
+        return f"{_canon(self.remote)}..{_canon(str(self.local))}"
+
+
+@dataclass
+class Config:
+    listings_dir:     Path
+    logfile:          Path
+    debounce:         float
+    remote_poll:      int
+    token_refresh:    int
+    log_max_bytes:    int
+    log_backups:      int
+    bisync_opts:      list[str]
+    exclude_patterns: list[str]
+    pairs:            list[Pair]
+    source:           Path   # file the config was loaded from
+
+
+# The active configuration, populated by main() before any work happens.
+CFG: Config = None  # type: ignore[assignment]
+
+# rclone canonicalizes a path into a listing filename by replacing whitespace,
+# slashes, colons and glob chars with '_' after trimming surrounding slashes.
+# Session name = canon(path1) + ".." + canon(path2).  Verified against the .lst
+# files rclone produces in listings_dir.
+_CANON_RE = re.compile(r"[\s\\/:?*]")
+
+
+def _canon(s: str) -> str:
+    return _CANON_RE.sub("_", s.strip("/"))
+
+
+def _expand(value) -> Path:
+    return Path(os.path.expanduser(os.path.expandvars(str(value))))
+
+
+def config_path(explicit: "str | None") -> Path:
+    if explicit:
+        return _expand(explicit)
+    env = os.environ.get("SYNC_ONEDRIVE_CONFIG")
+    if env:
+        return _expand(env)
+    base = os.environ.get("XDG_CONFIG_HOME") or "~/.config"
+    return _expand(base) / "sync-onedrive" / "config.toml"
+
+
+def load_config(path: Path) -> Config:
+    if not path.is_file():
+        sys.exit(f"sync-onedrive: no config file at {path}\n"
+                 f"Create one (see the template under .config/sync-onedrive/config.toml) "
+                 f"or point --config / $SYNC_ONEDRIVE_CONFIG at it.")
+
+    with path.open("rb") as fh:
+        data = tomllib.load(fh)
+
+    settings = {**DEFAULT_SETTINGS, **data.get("settings", {})}
+
+    raw_pairs = data.get("pair", [])
+    if not raw_pairs:
+        sys.exit(f"sync-onedrive: config {path} defines no [[pair]] entries.")
+
+    pairs: list[Pair] = []
+    seen: dict[str, str] = {}
+    for i, entry in enumerate(raw_pairs):
+        for key in ("name", "remote", "local"):
+            if key not in entry:
+                sys.exit(f"sync-onedrive: [[pair]] #{i + 1} in {path} is missing '{key}'.")
+        pair = Pair(name=str(entry["name"]), remote=str(entry["remote"]), local=_expand(entry["local"]))
+        if pair.session in seen:
+            sys.exit(f"sync-onedrive: pairs '{seen[pair.session]}' and '{pair.name}' "
+                     f"map to the same bisync session - remote/local must be unique.")
+        seen[pair.session] = pair.name
+        pairs.append(pair)
+
+    return Config(
+        listings_dir=_expand(settings["listings_dir"]),
+        logfile=_expand(settings["logfile"]),
+        debounce=float(settings["debounce"]),
+        remote_poll=int(settings["remote_poll"]),
+        token_refresh=int(settings["token_refresh"]),
+        log_max_bytes=int(settings["log_max_bytes"]),
+        log_backups=int(settings["log_backups"]),
+        bisync_opts=list(settings["bisync_opts"]),
+        exclude_patterns=list(settings["exclude_patterns"]),
+        pairs=pairs,
+        source=path,
+    )
 
 # ── Logging ───────────────────────────────────────────────────────────────────
 
-def setup_logging() -> logging.Logger:
-    LOGFILE.parent.mkdir(parents=True, exist_ok=True)
+log = logging.getLogger("onedrive-sync")
+
+
+def setup_logging(cfg: Config) -> None:
+    cfg.logfile.parent.mkdir(parents=True, exist_ok=True)
 
     fmt = logging.Formatter(fmt="%(asctime)s [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
-    file_handler = RotatingFileHandler(LOGFILE, maxBytes=LOG_MAX, backupCount=LOG_BACKUPS, encoding="utf-8")
+    file_handler = RotatingFileHandler(cfg.logfile, maxBytes=cfg.log_max_bytes,
+                                       backupCount=cfg.log_backups, encoding="utf-8")
     file_handler.setFormatter(fmt)
 
     stream_handler = logging.StreamHandler(sys.stdout)
     stream_handler.setFormatter(fmt)
 
-    logger = logging.getLogger("onedrive-sync")
-    logger.setLevel(logging.DEBUG)
-    logger.addHandler(file_handler)
-    logger.addHandler(stream_handler)
-
-    return logger
-
-
-log = setup_logging()
+    log.setLevel(logging.DEBUG)
+    log.addHandler(file_handler)
+    log.addHandler(stream_handler)
 
 # ── Desktop notifications ─────────────────────────────────────────────────────
 
@@ -96,18 +218,19 @@ def notify(summary: str, body: str = "", urgency: str = "low", icon: str = ""):
 
 # ── Lock / Listings helpers ───────────────────────────────────────────────────
 
-def listings_ok() -> bool:
-    return ((LISTINGS_DIR / f"{LST_BASE}.path1.lst").exists() and (LISTINGS_DIR / f"{LST_BASE}.path2.lst").exists())
+def listings_ok(pair: Pair) -> bool:
+    base = pair.session
+    return (CFG.listings_dir / f"{base}.path1.lst").exists() and (CFG.listings_dir / f"{base}.path2.lst").exists()
 
 
-def cleanup_stale_rclone_lock() -> bool:
+def cleanup_stale_rclone_lock(pair: Pair) -> bool:
     """
     Remove a stale bisync lock file left behind by a previously killed process.
 
     rclone bisync writes a JSON lock file containing the PID of the owner.
     Returns True if it is safe to proceed, False if a live lock is held.
     """
-    lck = LISTINGS_DIR / f"{LST_BASE}.lck"
+    lck = CFG.listings_dir / f"{pair.session}.lck"
     if not lck.exists():
         return True
 
@@ -115,23 +238,23 @@ def cleanup_stale_rclone_lock() -> bool:
         data = json.loads(lck.read_text())
         pid = int(data["PID"])
     except Exception as exc:
-        log.warning("Could not parse bisync lock file (%s) – leaving it alone", exc)
+        log.warning("[%s] Could not parse bisync lock file (%s) - leaving it alone", pair.name, exc)
         return False
 
     # Check whether the owning process is still alive
     try:
         os.kill(pid, 0)
-        # Process is alive – a real bisync is running
-        log.warning("bisync lock held by running PID %d – skipping this run", pid)
+        # Process is alive - a real bisync is running
+        log.warning("[%s] bisync lock held by running PID %d - skipping this run", pair.name, pid)
         return False
     except ProcessLookupError:
-        pass  # PID is dead → stale lock
+        pass  # PID is dead -> stale lock
     except PermissionError:
-        # PID exists but belongs to another user – treat as alive
-        log.warning("bisync lock held by PID %d (no permission to signal) – skipping", pid)
+        # PID exists but belongs to another user - treat as alive
+        log.warning("[%s] bisync lock held by PID %d (no permission to signal) - skipping", pair.name, pid)
         return False
 
-    log.warning("Stale bisync lock found (PID %d is dead) – removing", pid)
+    log.warning("[%s] Stale bisync lock found (PID %d is dead) - removing", pair.name, pid)
     try:
         subprocess.run(["rclone", "deletefile", str(lck)], check=False, timeout=15, capture_output=True)
     except Exception:
@@ -141,66 +264,111 @@ def cleanup_stale_rclone_lock() -> bool:
 
 # ── Bisync ────────────────────────────────────────────────────────────────────
 
-# Threading lock: ensures only one bisync runs at a time across all threads.
+# Global lock: only one bisync runs at a time across all pairs and all threads.
 _bisync_lock = threading.Lock()
 
+# Pairs we have already warned about for missing listings (avoids notify spam).
+_missing_notified: set[str] = set()
 
-def do_bisync(reason: str = "manual") -> bool:
-    """
-    Run rclone bisync.  Automatically adds --resync when listings are missing.
-    Returns True on success, False on failure.
-    """
-    if not _bisync_lock.acquire(blocking=False):
-        log.debug("bisync already running – skipping (%s)", reason)
-        return True
+# Log lines worth keeping.  Matched case-insensitively so rclone's "Copied (new)",
+# "Deleted", "Renamed" etc. are no longer swallowed (the old filter was case-
+# sensitive and silently logged nothing but stats/errors).
+_LOG_KEYWORDS = ("transferred", "errors", "error", "warn", "copied", "deleted", "renamed", "resync")
 
-    try:
-        if not cleanup_stale_rclone_lock():
+
+def do_bisync(pair: Pair, reason: str = "manual", resync: bool = False) -> bool:
+    """
+    Run rclone bisync for one pair.  Returns True on success, False on failure.
+
+    Missing listings are a hard failure unless resync=True is passed explicitly.
+    """
+    with _bisync_lock:
+        if not cleanup_stale_rclone_lock(pair):
             return False
 
-        opts = list(BISYNC_OPTS)
-        resync = False
+        opts = list(CFG.bisync_opts)
 
-        if not listings_ok():
-            log.warning("Listings missing – adding --resync (reason: %s)", reason)
-            notify("OneDrive Sync", "Listings missing, starting resync...", urgency="normal", icon="dialog-warning")
+        if resync:
             opts.append("--resync")
-            resync = True
+        elif not listings_ok(pair):
+            log.error("[%s] Listings missing - refusing to sync (reason: %s). "
+                      "Run 'sync-onedrive --resync' to initialize.", pair.name, reason)
+            if pair.name not in _missing_notified:
+                _missing_notified.add(pair.name)
+                notify("Cloud Sync - not initialized",
+                       f"{pair.name}: no bisync baseline.\nRun: sync-onedrive --resync",
+                       urgency="critical", icon="dialog-error")
+            return False
 
-        log.info("Starting bisync (reason: %s, resync: %s)", reason, resync)
+        log.info("[%s] Starting bisync (reason: %s, resync: %s)", pair.name, reason, resync)
 
-        cmd = ["rclone", "bisync", REMOTE, str(LOCAL)] + opts
+        cmd = ["rclone", "bisync", pair.remote, str(pair.local)] + opts
         result = subprocess.run(cmd, capture_output=True, text=True)
         output = result.stdout + result.stderr
 
-        # Log relevant lines only
+        # Log relevant lines only (case-insensitive match)
         for line in output.splitlines():
-            if any(kw in line for kw in ("Transferred", "Errors", "ERROR", "WARN", "copied", "deleted", "renamed")):
-                log.info("  %s", line.strip())
+            low = line.lower()
+            if any(kw in low for kw in _LOG_KEYWORDS):
+                log.info("[%s]   %s", pair.name, line.strip())
 
         if result.returncode != 0:
-            log.error("bisync failed (rc=%d)", result.returncode)
-            notify("OneDrive Sync", f"Sync failed (rc={result.returncode})\njournalctl --user -u onedrive-sync", urgency="critical", icon="dialog-error")
+            log.error("[%s] bisync failed (rc=%d)", pair.name, result.returncode)
+            notify("Cloud Sync failed",
+                   f"{pair.name} (rc={result.returncode})\njournalctl --user -u onedrive-sync",
+                   urgency="critical", icon="dialog-error")
             return False
 
+        # Success: clear any earlier "not initialized" warning state.
+        _missing_notified.discard(pair.name)
+        log.info("[%s] bisync ok", pair.name)
         return True
 
-    finally:
-        _bisync_lock.release()
+
+def sync_all(reason: str, pairs: "list[Pair] | None" = None) -> bool:
+    """Bisync every pair sequentially.  Returns True only if all succeeded."""
+    ok = True
+    for pair in (pairs if pairs is not None else CFG.pairs):
+        if not do_bisync(pair, reason):
+            ok = False
+    return ok
+
+# ── OAuth token refresh ───────────────────────────────────────────────────────
+
+def refresh_tokens() -> None:
+    """
+    Touch every remote so rclone renews the OAuth access token (and rewrites the
+    refresh token to the config).  A lightweight top-level listing is enough.
+    """
+    for remote in dict.fromkeys(p.remote for p in CFG.pairs):  # unique, order-preserving
+        try:
+            r = subprocess.run(["rclone", "lsd", remote, "--max-depth", "1"],
+                               capture_output=True, text=True, timeout=120)
+            if r.returncode == 0:
+                log.debug("Token refresh ok: %s", remote)
+            else:
+                log.warning("Token refresh failed for %s: %s", remote, r.stderr.strip())
+                notify("Cloud Sync - token", f"{remote} could not refresh.\nRe-auth: rclone config reconnect",
+                       urgency="normal", icon="dialog-warning")
+        except Exception as exc:
+            log.warning("Token refresh error for %s: %s", remote, exc)
+
+
+def token_refresh_loop(stop_event: threading.Event):
+    while not stop_event.wait(timeout=CFG.token_refresh):
+        refresh_tokens()
 
 # ── Watchdog (local changes) ──────────────────────────────────────────────────
 
 class ChangeHandler(FileSystemEventHandler):
-    """Debounced handler: waits DEBOUNCE seconds after the last event, then syncs."""
+    """Per-pair debounced handler: waits debounce seconds after the last event."""
 
-    def __init__(self):
+    def __init__(self, pair: Pair):
         super().__init__()
-        self._timer: threading.Timer | None = None
-        self._timer_lock = threading.Lock()
+        self._pair = pair
 
     def _should_ignore(self, path: str) -> bool:
-        import re
-        return any(re.search(pat, path) for pat in EXCLUDE_PATTERNS)
+        return any(re.search(pat, path) for pat in CFG.exclude_patterns)
 
     def on_any_event(self, event):
         if event.is_directory:
@@ -208,60 +376,121 @@ class ChangeHandler(FileSystemEventHandler):
         if self._should_ignore(event.src_path):
             return
 
-        with self._timer_lock:
-            if self._timer is not None:
-                self._timer.cancel()
-            self._timer = threading.Timer(DEBOUNCE, self._fire)
-            self._timer.daemon = True
-            self._timer.start()
+        pair = self._pair
+        with pair._timer_lock:
+            if pair._timer is not None:
+                pair._timer.cancel()
+            pair._timer = threading.Timer(CFG.debounce, self._fire)
+            pair._timer.daemon = True
+            pair._timer.start()
 
     def _fire(self):
-        with self._timer_lock:
-            self._timer = None
-        do_bisync("inotify")
+        pair = self._pair
+        with pair._timer_lock:
+            pair._timer = None
+        do_bisync(pair, "inotify")
 
 # ── Remote poll loop ──────────────────────────────────────────────────────────
 
 def remote_poll_loop(stop_event: threading.Event):
-    """Polls remote every REMOTE_POLL seconds until stop_event is set."""
-    while not stop_event.wait(timeout=REMOTE_POLL):
-        do_bisync("remote-poll")
+    """Polls all remotes every remote_poll seconds until stop_event is set."""
+    while not stop_event.wait(timeout=CFG.remote_poll):
+        sync_all("remote-poll")
+
+# ── CLI helpers ───────────────────────────────────────────────────────────────
+
+def find_pair(token: str) -> "Pair | None":
+    """Match a --pair argument against a pair's label or remote (case-insensitive)."""
+    t = token.strip().lower()
+    for p in CFG.pairs:
+        if t in (p.name.lower(), p.remote.lower().rstrip(":")) or t in p.name.lower():
+            return p
+    return None
+
+
+def print_pairs() -> None:
+    for p in CFG.pairs:
+        state = "ready" if listings_ok(p) else "NOT initialized (needs --resync)"
+        print(f"  {p.name:<24} {p.remote:<24} -> {p.local}  [{state}]")
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description="rclone bisync daemon for OneDrive")
-    parser.add_argument("--once", action="store_true", help="Run a single bisync and exit (for use with systemd timer)")
+    global CFG
+
+    parser = argparse.ArgumentParser(description="rclone bisync daemon for multiple cloud remotes")
+    parser.add_argument("--config", metavar="PATH", help="Config file (default: $SYNC_ONEDRIVE_CONFIG or XDG path)")
+    parser.add_argument("--once", action="store_true", help="Bisync every pair once and exit (systemd timer)")
+    parser.add_argument("--resync", action="store_true", help="Establish the bisync baseline (see --pair/--force)")
+    parser.add_argument("--pair", metavar="NAME", help="Restrict --resync to one pair (label or remote name)")
+    parser.add_argument("--force", action="store_true", help="With --resync: re-baseline every pair, even initialized ones")
+    parser.add_argument("--list", action="store_true", help="List configured pairs and their status, then exit")
     args = parser.parse_args()
 
-    LOCAL.mkdir(parents=True, exist_ok=True)
+    CFG = load_config(config_path(args.config))
+    setup_logging(CFG)
 
+    if args.list:
+        print_pairs()
+        return
+
+    # Ensure every local directory and the listings dir exist before touching rclone.
+    CFG.listings_dir.mkdir(parents=True, exist_ok=True)
+    for p in CFG.pairs:
+        p.local.mkdir(parents=True, exist_ok=True)
+
+    # ── Explicit resync / initialization ────────────────────────────────────
+    if args.resync:
+        if args.pair:
+            target = find_pair(args.pair)
+            if target is None:
+                log.error("No pair matches --pair %r. Known pairs:", args.pair)
+                print_pairs()
+                sys.exit(2)
+            targets = [target]
+        elif args.force:
+            targets = list(CFG.pairs)
+        else:
+            # Safe default: only initialize pairs that have no baseline yet.
+            targets = [p for p in CFG.pairs if not listings_ok(p)]
+            if not targets:
+                log.info("All pairs already initialized - nothing to resync (use --force to override).")
+                return
+
+        log.info("Resync of: %s", ", ".join(p.name for p in targets))
+        ok = all(do_bisync(p, "resync", resync=True) for p in targets)
+        sys.exit(0 if ok else 1)
+
+    # ── One-shot ─────────────────────────────────────────────────────────────
     if args.once:
-        success = do_bisync("periodic-timer")
-        sys.exit(0 if success else 1)
+        sys.exit(0 if sync_all("periodic-timer") else 1)
 
-    # ── Daemon mode ───────────────────────────────────────────────────────────
+    # ── Daemon mode ──────────────────────────────────────────────────────────
+    log.info("Starting cloud sync daemon (%d pairs, config: %s)", len(CFG.pairs), CFG.source)
+    for p in CFG.pairs:
+        log.info("  pair: %s  (%s -> %s)", p.name, p.remote, p.local)
 
-    log.info("Starting OneDrive sync daemon (local: %s)", LOCAL)
+    # Initial sync of all pairs on startup
+    sync_all("startup")
 
-    # Initial sync on startup
-    do_bisync("startup")
-
-    # Start remote poll thread
     stop_event = threading.Event()
-    poll_thread = threading.Thread(target=remote_poll_loop, args=(stop_event,), name="remote-poll", daemon=True, )
+
+    poll_thread = threading.Thread(target=remote_poll_loop, args=(stop_event,), name="remote-poll", daemon=True)
     poll_thread.start()
 
-    # Start local filesystem watcher
-    handler = ChangeHandler()
+    token_thread = threading.Thread(target=token_refresh_loop, args=(stop_event,), name="token-refresh", daemon=True)
+    token_thread.start()
+
+    # One filesystem watcher per local directory.
     observer = Observer()
-    observer.schedule(handler, str(LOCAL), recursive=True)
+    for p in CFG.pairs:
+        observer.schedule(ChangeHandler(p), str(p.local), recursive=True)
+        log.info("Watching %s for local changes (debounce: %ss)", p.local, CFG.debounce)
     observer.start()
-    log.info("Watching %s for local changes (debounce: %ss)", LOCAL, DEBOUNCE)
 
     # Graceful shutdown on SIGTERM / SIGINT
     def shutdown(signum, _frame):
-        log.info("Received signal %d – shutting down", signum)
+        log.info("Received signal %d - shutting down", signum)
         stop_event.set()
         observer.stop()
 
@@ -273,6 +502,7 @@ def main():
     finally:
         stop_event.set()
         poll_thread.join(timeout=5)
+        token_thread.join(timeout=5)
         log.info("Shutdown complete")
 
 

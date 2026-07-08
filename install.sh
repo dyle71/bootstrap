@@ -148,19 +148,23 @@ esac
 # ---------------------------------------------------------------------------
 
 echo ""
-echo "=== Step 1/4: Installing packages for ${ID} ${VERSION_ID:-} ==="
+echo "=== Step 1/5: Installing packages for ${ID} ${VERSION_ID:-} ==="
 sh "${DISTRO_SCRIPT}"
 
 echo ""
-echo "=== Step 2/4: Setting up zsh ==="
+echo "=== Step 2/5: Setting up zsh ==="
 sh "${WORK_DIR}/setup-zsh.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 3/4: Setting up neovim ==="
+echo "=== Step 3/5: Setting up neovim ==="
 sh "${WORK_DIR}/setup-nvim.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 4/4: Setting up systemd user units ==="
+echo "=== Step 4/5: Installing helper applications ==="
+sh "${WORK_DIR}/setup-applications.sh" "${WORK_DIR}"
+
+echo ""
+echo "=== Step 5/5: Setting up systemd user units ==="
 sh "${WORK_DIR}/setup-systemd.sh" "${WORK_DIR}"
 
 echo ""
