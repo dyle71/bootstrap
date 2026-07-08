@@ -23,7 +23,6 @@ log_backups   = 2
 bisync_opts = [
     "--use-server-modtime",
     "--transfers", "8",
-    "--metadata",
     "--conflict-resolve", "newer",
     "--conflict-loser", "num",
     "--resilient",
