@@ -43,12 +43,6 @@ name   = "OneDrive HTL Villach"
 remote = "OneDrive HTL Villach:"
 local  = "~/Documents/Cloud/mao@htl-villach.at/OneDrive"
 
-[[pair]]
-name   = "Teams – Lehrer IF MT"
-remote = "Teams - Lehrer IF MT:"
-local  = "~/Documents/Cloud/mao@htl-villach.at/Teams/Lehrer IF MT"
-
-[[pair]]
-name   = "Teams – IT-Management"
-remote = "Teams - IT-Management:"
-local  = "~/Documents/Cloud/mao@htl-villach.at/Teams/IT-Management"
+# Die Teams-Ordner werden NICHT per bisync gehalten, sondern als rclone-FUSE-Mounts
+# (systemd user units: htl-teams-lehrer-if-mt.service, htl-teams-it-management.service).
+# Daher hier bewusst KEINE [[pair]]-Blöcke — sonst würde bisync mit dem Mount kollidieren.
