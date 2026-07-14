@@ -30,6 +30,7 @@
 
 [pull]
   rebase = true
+  ff = only
 
 [core]
   pager = sh -c 'command -v bat >/dev/null 2>&1 && exec bat --theme Dracula --style=changes || exec less -FRX'
