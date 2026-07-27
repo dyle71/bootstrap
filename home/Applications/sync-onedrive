@@ -39,9 +39,11 @@ import logging
 import os
 import re
 import signal
+import socket
 import subprocess
 import sys
 import threading
+import time
 import tomllib
 from dataclasses import dataclass, field
 from logging.handlers import RotatingFileHandler
@@ -57,7 +59,15 @@ DEFAULT_SETTINGS = {
     "logfile":       "~/.local/share/rclone/onedrive-sync.log",
     "debounce":      1.0,
     "remote_poll":   30,
+    # On repeated failures the poll interval doubles until it reaches this cap,
+    # so a broken connection does not hammer the remote every 30 seconds.
+    "remote_poll_max": 900,
     "token_refresh": 6 * 3600,
+    # A problem that persists is re-announced at most once per this interval.
+    "notify_repeat": 6 * 3600,
+    # host:port used for the cheap "is there internet at all" probe
+    "probe_host":    "graph.microsoft.com",
+    "probe_port":    443,
     "log_max_bytes": 5 * 1024 * 1024,
     "log_backups":   2,
     "bisync_opts": [
@@ -97,7 +107,11 @@ class Config:
     logfile:          Path
     debounce:         float
     remote_poll:      int
+    remote_poll_max:  int
     token_refresh:    int
+    notify_repeat:    int
+    probe_host:       str
+    probe_port:       int
     log_max_bytes:    int
     log_backups:      int
     bisync_opts:      list[str]
@@ -167,7 +181,11 @@ def load_config(path: Path) -> Config:
         logfile=_expand(settings["logfile"]),
         debounce=float(settings["debounce"]),
         remote_poll=int(settings["remote_poll"]),
+        remote_poll_max=max(int(settings["remote_poll_max"]), int(settings["remote_poll"])),
         token_refresh=int(settings["token_refresh"]),
+        notify_repeat=int(settings["notify_repeat"]),
+        probe_host=str(settings["probe_host"]),
+        probe_port=int(settings["probe_port"]),
         log_max_bytes=int(settings["log_max_bytes"]),
         log_backups=int(settings["log_backups"]),
         bisync_opts=list(settings["bisync_opts"]),
@@ -199,22 +217,119 @@ def setup_logging(cfg: Config) -> None:
 
 # ── Desktop notifications ─────────────────────────────────────────────────────
 
-def notify(summary: str, body: str = "", urgency: str = "low", icon: str = ""):
-    """Send a desktop notification via notify-send (best-effort, never raises)."""
+#
+# Notifications are edge-triggered, never level-triggered.  The rule is:
+#
+#   * one notification per (key, state) TRANSITION - a failure that repeats
+#     every poll stays silent after the first message,
+#   * a persisting problem is re-announced at most once per notify_repeat,
+#   * every message for a key REPLACES the previous one (notify-send -r), so
+#     the notification centre holds at most one entry per key,
+#   * the state lives in a file under $XDG_RUNTIME_DIR, so the daemon, the
+#     --once timer run and any restart of either share it instead of each
+#     starting their own notification stream.
+#
+# Ephemeral by design: $XDG_RUNTIME_DIR is wiped on logout, so a fresh session
+# is allowed to tell you about a problem again.
+
+_NOTIFY_STATE_FILE = Path(os.environ.get("XDG_RUNTIME_DIR") or "/tmp") / "sync-onedrive" / "notify-state.json"
+_notify_lock = threading.Lock()
+
+
+def _notify_state_load() -> dict:
     try:
-        cmd = ["notify-send", "-u", urgency]
+        return json.loads(_NOTIFY_STATE_FILE.read_text())
+    except Exception:
+        return {}
 
-        if icon:
-            cmd += ["-i", icon]
-        cmd += [summary]
 
-        if body:
-            cmd.append(body)
-
-        subprocess.run(cmd, check=False, timeout=5)
-
+def _notify_state_save(state: dict) -> None:
+    try:
+        _NOTIFY_STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = _NOTIFY_STATE_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(state))
+        tmp.replace(_NOTIFY_STATE_FILE)
     except Exception:
         pass
+
+
+def _notify_send(summary: str, body: str, urgency: str, icon: str,
+                 replace_id: int = 0, transient: bool = False) -> int:
+    """Fire notify-send and return the notification id (0 on any problem)."""
+    cmd = ["notify-send", "-p", "-a", "Cloud Sync", "-u", urgency]
+    if replace_id:
+        cmd += ["-r", str(replace_id)]
+    if icon:
+        cmd += ["-i", icon]
+    if transient:
+        # Toast only, no permanent entry in the notification centre.
+        cmd += ["-h", "byte:transient:1"]
+    cmd.append(summary)
+    if body:
+        cmd.append(body)
+    try:
+        r = subprocess.run(cmd, check=False, timeout=5, capture_output=True, text=True)
+        return int((r.stdout or "0").strip() or 0)
+    except Exception:
+        return 0
+
+
+def notify_state(key: str, state: str, summary: str, body: str = "",
+                 urgency: str = "low", icon: str = "", transient: bool = False) -> None:
+    """
+    Announce that `key` has entered `state` - but only if that is news.
+
+    `key` identifies the thing being reported on (a pair, a remote, the network),
+    `state` its condition ("ok", "fail:7", "offline", ...).  Re-entering the same
+    state is silent; "ok" is only reported when it follows a non-ok state, so a
+    healthy sync never notifies at all.
+    """
+    now = time.time()
+    repeat_after = CFG.notify_repeat if CFG else 6 * 3600
+    with _notify_lock:
+        allstates = _notify_state_load()
+        entry = allstates.get(key) or {}
+        prev = entry.get("state")
+        prev_id = int(entry.get("id") or 0)
+
+        if prev == state:
+            # Unchanged.  Healthy states never repeat; problems only after a while.
+            if state == "ok" or (now - float(entry.get("ts") or 0)) < repeat_after:
+                return
+        elif state == "ok" and prev is None:
+            # First ever run - record health silently, nothing to celebrate.
+            allstates[key] = {"state": state, "ts": now, "id": prev_id}
+            _notify_state_save(allstates)
+            return
+
+        new_id = _notify_send(summary, body, urgency, icon, prev_id, transient)
+        allstates[key] = {"state": state, "ts": now, "id": new_id or prev_id}
+        _notify_state_save(allstates)
+
+
+def notify_ok(key: str, summary: str, body: str = "") -> None:
+    """Clear a key's problem state; only visible if something was wrong before."""
+    notify_state(key, "ok", summary, body, urgency="low",
+                 icon="emblem-default", transient=True)
+
+# ── Connectivity ──────────────────────────────────────────────────────────────
+
+# rclone failures that mean "the network is gone", not "your data is in trouble".
+_NET_ERROR_RE = re.compile(
+    r"dial tcp|no such host|network is unreachable|connection refused|host is down|"
+    r"i/o timeout|context deadline exceeded|TLS handshake|temporary failure in name resolution|"
+    r"couldn't connect|connection reset by peer",
+    re.IGNORECASE,
+)
+
+
+def online() -> bool:
+    """Cheap TCP probe: is the cloud endpoint reachable at all?"""
+    try:
+        with socket.create_connection((CFG.probe_host, CFG.probe_port), timeout=4):
+            return True
+    except OSError:
+        return False
 
 # ── Lock / Listings helpers ───────────────────────────────────────────────────
 
@@ -267,9 +382,6 @@ def cleanup_stale_rclone_lock(pair: Pair) -> bool:
 # Global lock: only one bisync runs at a time across all pairs and all threads.
 _bisync_lock = threading.Lock()
 
-# Pairs we have already warned about for missing listings (avoids notify spam).
-_missing_notified: set[str] = set()
-
 # Log lines worth keeping.  Matched case-insensitively so rclone's "Copied (new)",
 # "Deleted", "Renamed" etc. are no longer swallowed (the old filter was case-
 # sensitive and silently logged nothing but stats/errors).
@@ -282,6 +394,18 @@ def do_bisync(pair: Pair, reason: str = "manual", resync: bool = False) -> bool:
 
     Missing listings are a hard failure unless resync=True is passed explicitly.
     """
+    key = f"pair:{pair.name}"
+
+    # No network -> not a sync failure.  Report it once, globally, and get out
+    # before rclone spends 30 seconds discovering the same thing per pair.
+    if not online():
+        log.info("[%s] Offline - skipping bisync (reason: %s)", pair.name, reason)
+        notify_state("net", "offline", "Cloud Sync pausiert",
+                     "Keine Verbindung zur Cloud - wird automatisch fortgesetzt.",
+                     urgency="normal", icon="network-offline")
+        return False
+    notify_ok("net", "Cloud Sync", "Verbindung wieder da")
+
     with _bisync_lock:
         if not cleanup_stale_rclone_lock(pair):
             return False
@@ -293,11 +417,9 @@ def do_bisync(pair: Pair, reason: str = "manual", resync: bool = False) -> bool:
         elif not listings_ok(pair):
             log.error("[%s] Listings missing - refusing to sync (reason: %s). "
                       "Run 'sync-onedrive --resync' to initialize.", pair.name, reason)
-            if pair.name not in _missing_notified:
-                _missing_notified.add(pair.name)
-                notify("Cloud Sync - not initialized",
-                       f"{pair.name}: no bisync baseline.\nRun: sync-onedrive --resync",
-                       urgency="critical", icon="dialog-error")
+            notify_state(key, "uninit", "Cloud Sync nicht initialisiert",
+                         f"{pair.name}: keine bisync-Baseline.\nsync-onedrive --resync",
+                         urgency="critical", icon="dialog-error")
             return False
 
         log.info("[%s] Starting bisync (reason: %s, resync: %s)", pair.name, reason, resync)
@@ -313,15 +435,25 @@ def do_bisync(pair: Pair, reason: str = "manual", resync: bool = False) -> bool:
                 log.info("[%s]   %s", pair.name, line.strip())
 
         if result.returncode != 0:
+            if _NET_ERROR_RE.search(output):
+                # Connection died mid-run: transient, and already covered by the
+                # global "offline" state.  Log it, do not alarm the user per pair.
+                log.warning("[%s] bisync aborted - network error (rc=%d)",
+                            pair.name, result.returncode)
+                notify_state("net", "offline", "Cloud Sync pausiert",
+                             "Verbindung zur Cloud abgebrochen - Wiederholung läuft.",
+                             urgency="normal", icon="network-offline")
+                return False
+
             log.error("[%s] bisync failed (rc=%d)", pair.name, result.returncode)
-            notify("Cloud Sync failed",
-                   f"{pair.name} (rc={result.returncode})\njournalctl --user -u onedrive-sync",
-                   urgency="critical", icon="dialog-error")
+            notify_state(key, f"fail:{result.returncode}", "Cloud Sync fehlgeschlagen",
+                         f"{pair.name} (rc={result.returncode})\n"
+                         f"journalctl --user -u onedrive-sync",
+                         urgency="critical", icon="dialog-error")
             return False
 
-        # Success: clear any earlier "not initialized" warning state.
-        _missing_notified.discard(pair.name)
         log.info("[%s] bisync ok", pair.name)
+        notify_ok(key, "Cloud Sync wieder ok", pair.name)
         return True
 
 
@@ -346,10 +478,14 @@ def refresh_tokens() -> None:
                                capture_output=True, text=True, timeout=120)
             if r.returncode == 0:
                 log.debug("Token refresh ok: %s", remote)
+                notify_ok(f"token:{remote}", "Cloud Sync - Token erneuert", remote)
+            elif _NET_ERROR_RE.search(r.stderr or ""):
+                log.info("Token refresh skipped for %s - offline", remote)
             else:
                 log.warning("Token refresh failed for %s: %s", remote, r.stderr.strip())
-                notify("Cloud Sync - token", f"{remote} could not refresh.\nRe-auth: rclone config reconnect",
-                       urgency="normal", icon="dialog-warning")
+                notify_state(f"token:{remote}", f"fail:{r.returncode}", "Cloud Sync - Token abgelaufen",
+                             f"{remote}\nrclone config reconnect",
+                             urgency="normal", icon="dialog-warning")
         except Exception as exc:
             log.warning("Token refresh error for %s: %s", remote, exc)
 
@@ -393,9 +529,22 @@ class ChangeHandler(FileSystemEventHandler):
 # ── Remote poll loop ──────────────────────────────────────────────────────────
 
 def remote_poll_loop(stop_event: threading.Event):
-    """Polls all remotes every remote_poll seconds until stop_event is set."""
-    while not stop_event.wait(timeout=CFG.remote_poll):
-        sync_all("remote-poll")
+    """
+    Polls all remotes until stop_event is set.
+
+    Healthy: every remote_poll seconds.  After a failed round the interval
+    doubles up to remote_poll_max, so a remote that is down (or a laptop in a
+    train tunnel) is retried at a sane rate instead of 120 times per hour.
+    """
+    delay = CFG.remote_poll
+    while not stop_event.wait(timeout=delay):
+        if sync_all("remote-poll"):
+            if delay != CFG.remote_poll:
+                log.info("Sync healthy again - poll interval back to %ds", CFG.remote_poll)
+            delay = CFG.remote_poll
+        else:
+            delay = min(delay * 2, CFG.remote_poll_max)
+            log.info("Sync round failed - next remote poll in %ds", delay)
 
 # ── CLI helpers ───────────────────────────────────────────────────────────────
 
