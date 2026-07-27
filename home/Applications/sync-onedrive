@@ -25,6 +25,15 @@ Modes:
                 A resync establishes the baseline WITHOUT transferring identical
                 files, but it is destructive on conflicts - hence never automatic.
   --list        Print the configured pairs and their init status, then exit.
+  --status      Offline health report: baseline age, outcome of the last run per
+                pair, failures since the last success, and the local files
+                modified since the baseline (i.e. not yet synced).  Exit code 0
+                only if every pair is healthy and has nothing pending.
+  --diff        Live per-file comparison against the remote via 'rclone check'
+                (--quick = size only, --pair NAME = one pair, --limit N = cap
+                the printed paths).  Exit code 0 only if everything matches.
+
+  --status and --diff also accept --json for scripting/monitoring.
 
 Design notes / intentional behavior:
   * Missing listings are a HARD failure in normal runs.  The daemon refuses to
@@ -34,6 +43,7 @@ Design notes / intentional behavior:
 """
 
 import argparse
+import contextlib
 import json
 import logging
 import os
@@ -403,11 +413,13 @@ def do_bisync(pair: Pair, reason: str = "manual", resync: bool = False) -> bool:
         notify_state("net", "offline", "Cloud Sync pausiert",
                      "Keine Verbindung zur Cloud - wird automatisch fortgesetzt.",
                      urgency="normal", icon="network-offline")
+        record_run(pair, "offline", reason)
         return False
     notify_ok("net", "Cloud Sync", "Verbindung wieder da")
 
     with _bisync_lock:
         if not cleanup_stale_rclone_lock(pair):
+            record_run(pair, "locked", reason)
             return False
 
         opts = list(CFG.bisync_opts)
@@ -420,6 +432,7 @@ def do_bisync(pair: Pair, reason: str = "manual", resync: bool = False) -> bool:
             notify_state(key, "uninit", "Cloud Sync nicht initialisiert",
                          f"{pair.name}: keine bisync-Baseline.\nsync-onedrive --resync",
                          urgency="critical", icon="dialog-error")
+            record_run(pair, "uninit", reason)
             return False
 
         log.info("[%s] Starting bisync (reason: %s, resync: %s)", pair.name, reason, resync)
@@ -429,10 +442,13 @@ def do_bisync(pair: Pair, reason: str = "manual", resync: bool = False) -> bool:
         output = result.stdout + result.stderr
 
         # Log relevant lines only (case-insensitive match)
+        changed = 0
         for line in output.splitlines():
             low = line.lower()
             if any(kw in low for kw in _LOG_KEYWORDS):
                 log.info("[%s]   %s", pair.name, line.strip())
+            if any(kw in low for kw in ("copied", "deleted", "renamed")):
+                changed += 1
 
         if result.returncode != 0:
             if _NET_ERROR_RE.search(output):
@@ -443,6 +459,7 @@ def do_bisync(pair: Pair, reason: str = "manual", resync: bool = False) -> bool:
                 notify_state("net", "offline", "Cloud Sync pausiert",
                              "Verbindung zur Cloud abgebrochen - Wiederholung läuft.",
                              urgency="normal", icon="network-offline")
+                record_run(pair, "offline", reason, result.returncode)
                 return False
 
             log.error("[%s] bisync failed (rc=%d)", pair.name, result.returncode)
@@ -450,9 +467,11 @@ def do_bisync(pair: Pair, reason: str = "manual", resync: bool = False) -> bool:
                          f"{pair.name} (rc={result.returncode})\n"
                          f"journalctl --user -u onedrive-sync",
                          urgency="critical", icon="dialog-error")
+            record_run(pair, "fail", reason, result.returncode)
             return False
 
         log.info("[%s] bisync ok", pair.name)
+        record_run(pair, "ok", reason, 0, changed)
         notify_ok(key, "Cloud Sync wieder ok", pair.name)
         return True
 
@@ -546,6 +565,253 @@ def remote_poll_loop(stop_event: threading.Event):
             delay = min(delay * 2, CFG.remote_poll_max)
             log.info("Sync round failed - next remote poll in %ds", delay)
 
+# ── Run status bookkeeping ────────────────────────────────────────────────────
+#
+# Unlike the notification state (ephemeral, $XDG_RUNTIME_DIR) this survives
+# reboots: it is the answer to "what did the sync actually do lately?".
+
+STATUS_FILE = _expand(Path(os.environ.get("XDG_STATE_HOME") or "~/.local/state") /
+                      "sync-onedrive" / "status.json")
+_status_lock = threading.Lock()
+
+
+def _status_load() -> dict:
+    try:
+        return json.loads(STATUS_FILE.read_text())
+    except Exception:
+        return {}
+
+
+def _status_save(data: dict) -> None:
+    try:
+        STATUS_FILE.parent.mkdir(parents=True, exist_ok=True)
+        tmp = STATUS_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(data, indent=1))
+        tmp.replace(STATUS_FILE)
+    except Exception:
+        pass
+
+
+def record_run(pair: Pair, result: str, reason: str, rc: int = 0, changed: int = 0) -> None:
+    """Remember the outcome of one bisync attempt.  result: ok|fail|offline|locked|uninit."""
+    now = time.time()
+    with _status_lock:
+        data = _status_load()
+        pairs = data.setdefault("pairs", {})
+        entry = pairs.setdefault(pair.name, {})
+        entry.update(last_run=now, last_result=result, last_reason=reason, last_rc=rc)
+        if result == "ok":
+            entry["last_ok"] = now
+            entry["fails_since_ok"] = 0
+            if changed:
+                entry["last_change"] = now
+                entry["last_changed_files"] = changed
+        else:
+            entry["fails_since_ok"] = int(entry.get("fails_since_ok") or 0) + 1
+        _status_save(data)
+
+
+def record_daemon(running: bool) -> None:
+    with _status_lock:
+        data = _status_load()
+        data["daemon"] = {"pid": os.getpid(), "started": time.time()} if running else {}
+        _status_save(data)
+
+
+def _daemon_alive(info: dict) -> bool:
+    pid = int(info.get("pid") or 0)
+    if not pid:
+        return False
+    try:
+        os.kill(pid, 0)
+        return True
+    except (ProcessLookupError, ValueError):
+        return False
+    except PermissionError:
+        return True
+
+
+def _ago(ts) -> str:
+    if not ts:
+        return "nie"
+    delta = int(time.time() - float(ts))
+    if delta < 0:
+        delta = 0
+    if delta < 60:
+        return f"vor {delta}s"
+    if delta < 3600:
+        return f"vor {delta // 60}min"
+    if delta < 86400:
+        return f"vor {delta // 3600}h {(delta % 3600) // 60}min"
+    return f"vor {delta // 86400}d {(delta % 86400) // 3600}h"
+
+
+def _stamp(ts) -> str:
+    return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(ts))) if ts else "-"
+
+
+def _listing_entries(pair: Pair) -> int:
+    """Number of files rclone recorded on the local side at the last sync."""
+    lst = CFG.listings_dir / f"{pair.session}.path2.lst"
+    try:
+        with lst.open("rb") as fh:
+            return max(sum(1 for _ in fh) - 1, 0)   # first line is the header
+    except Exception:
+        return 0
+
+
+def _local_changes_since(pair: Pair, since: float, cap: int = 5000) -> "tuple[int, list[str]]":
+    """
+    Files under the pair's local dir modified after `since`.
+
+    Purely local and instant - this is what "not yet synced" means offline.
+    Returns (count, up to 20 sample paths relative to the pair root).
+    """
+    count, sample = 0, []
+    for root, dirs, files in os.walk(pair.local):
+        dirs[:] = [d for d in dirs
+                   if not any(re.search(p, os.path.join(root, d)) for p in CFG.exclude_patterns)]
+        for name in files:
+            full = os.path.join(root, name)
+            if any(re.search(p, full) for p in CFG.exclude_patterns):
+                continue
+            try:
+                if os.lstat(full).st_mtime > since:
+                    count += 1
+                    if len(sample) < 20:
+                        sample.append(os.path.relpath(full, pair.local))
+            except OSError:
+                continue
+            if count >= cap:
+                return count, sample
+    return count, sample
+
+
+_RESULT_MARK = {"ok": "OK ", "fail": "FEHLER", "offline": "OFFLINE",
+                "locked": "GESPERRT", "uninit": "NICHT INITIALISIERT"}
+
+
+def print_status(as_json: bool = False) -> int:
+    """Instant, offline overview.  Exit code 0 = everything healthy."""
+    data = _status_load()
+    daemon = data.get("daemon") or {}
+    alive = _daemon_alive(daemon)
+    healthy = True
+    report = {"config": str(CFG.source),
+              "daemon": {"running": alive, "pid": daemon.get("pid"),
+                         "started": _stamp(daemon.get("started")) if alive else None},
+              "pairs": []}
+
+    for pair in CFG.pairs:
+        entry = (data.get("pairs") or {}).get(pair.name, {})
+        lst = CFG.listings_dir / f"{pair.session}.path2.lst"
+        baseline_ts = lst.stat().st_mtime if lst.exists() else 0
+        initialized = listings_ok(pair)
+        # Anything touched after the baseline was written is by definition not
+        # yet reflected in the last successful sync.
+        pending, sample = _local_changes_since(pair, baseline_ts) if initialized else (0, [])
+        locked = (CFG.listings_dir / f"{pair.session}.lck").exists()
+        result = entry.get("last_result") or ("uninit" if not initialized else "-")
+        if result != "ok" or pending or not initialized:
+            healthy = False
+        report["pairs"].append({
+            "name": pair.name, "remote": pair.remote, "local": str(pair.local),
+            "initialized": initialized, "baseline_files": _listing_entries(pair),
+            "baseline_written": _stamp(baseline_ts) if baseline_ts else None,
+            "last_result": result, "last_rc": entry.get("last_rc"),
+            "last_run": _stamp(entry.get("last_run")),
+            "last_ok": _stamp(entry.get("last_ok")),
+            "fails_since_ok": int(entry.get("fails_since_ok") or 0),
+            "pending_local": pending, "pending_sample": sample, "locked": locked,
+        })
+
+    if as_json:
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return 0 if healthy else 1
+
+    print(f"Konfiguration  {CFG.source}")
+    print(f"Daemon         {'läuft (PID %s, seit %s)' % (daemon.get('pid'), _stamp(daemon.get('started'))) if alive else 'läuft NICHT'}")
+    for p in report["pairs"]:
+        print()
+        print(f"{p['name']}")
+        print(f"  {p['remote']}  ->  {p['local']}")
+        if not p["initialized"]:
+            print("  Baseline       fehlt - 'sync-onedrive --resync' nötig")
+        else:
+            print(f"  Baseline       {p['baseline_files']} Dateien, geschrieben {p['baseline_written']}")
+        mark = _RESULT_MARK.get(p["last_result"], p["last_result"])
+        detail = f" (rc={p['last_rc']})" if p["last_result"] == "fail" and p["last_rc"] else ""
+        print(f"  Letzter Lauf   {mark}{detail}  {p['last_run']}")
+        if p["fails_since_ok"]:
+            n = p["fails_since_ok"]
+            print(f"                 {n} {'Fehlversuch' if n == 1 else 'Fehlversuche'} "
+                  f"seit dem letzten Erfolg ({p['last_ok']})")
+        if p["pending_local"]:
+            shown = ", ".join(p["pending_sample"][:3])
+            more = f" …(+{p['pending_local'] - 3})" if p["pending_local"] > 3 else ""
+            print(f"  Offen (lokal)  {p['pending_local']} Datei(en) seit der Baseline geändert: {shown}{more}")
+        else:
+            print("  Offen (lokal)  keine Änderungen seit der Baseline")
+        if p["locked"]:
+            print("  Lock           bisync-Lock vorhanden (läuft gerade, oder Rest eines Absturzes)")
+    print()
+    print("Details: sync-onedrive --diff   (echter Abgleich gegen die Cloud)")
+    return 0 if healthy else 1
+
+# ── Live diff against the remote ──────────────────────────────────────────────
+
+# rclone check --combined marks every path with one of these.  path1 = remote
+# (source), path2 = local (destination) - same order as the bisync invocation.
+_COMBINED_LABEL = {
+    "+": ("only_remote", "nur in der Cloud"),
+    "-": ("only_local",  "nur lokal"),
+    "*": ("differ",      "unterschiedlich"),
+    "!": ("error",       "Fehler beim Prüfen"),
+}
+
+
+def diff_pair(pair: Pair, limit: int = 50, quick: bool = False, as_json: bool = False) -> dict:
+    """Compare remote and local file by file via 'rclone check --combined'."""
+    cmd = ["rclone", "check", pair.remote, str(pair.local), "--combined", "-"]
+    if quick:
+        cmd.append("--size-only")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+
+    buckets: dict[str, list[str]] = {k: [] for k in _COMBINED_LABEL}
+    same = 0
+    for line in result.stdout.splitlines():
+        if len(line) < 3 or line[1] != " ":
+            continue
+        mark, path = line[0], line[2:]
+        if mark == "=":
+            same += 1
+        elif mark in buckets:
+            buckets[mark].append(path)
+
+    out = {"pair": pair.name, "in_sync": same,
+           **{_COMBINED_LABEL[k][0]: v for k, v in buckets.items()}}
+
+    if not as_json:
+        differing = sum(len(v) for v in buckets.values())
+        print(f"\n{pair.name}  ({pair.remote} <-> {pair.local})")
+        if result.returncode != 0 and not any(buckets.values()) and same == 0:
+            print(f"  Abgleich fehlgeschlagen (rc={result.returncode}): "
+                  f"{(result.stderr or '').strip().splitlines()[-1] if result.stderr else 'unbekannt'}")
+            return out
+        print(f"  {same} Dateien identisch, {differing} abweichend"
+              f"{'  (nur Größenvergleich)' if quick else ''}")
+        for mark, (_key, label) in _COMBINED_LABEL.items():
+            paths = buckets[mark]
+            if not paths:
+                continue
+            print(f"  {label} ({len(paths)}):")
+            for path in paths[:limit]:
+                print(f"    {mark} {path}")
+            if len(paths) > limit:
+                print(f"    … und {len(paths) - limit} weitere (--limit erhöhen)")
+    return out
+
+
 # ── CLI helpers ───────────────────────────────────────────────────────────────
 
 def find_pair(token: str) -> "Pair | None":
@@ -567,6 +833,10 @@ def print_pairs() -> None:
 def main():
     global CFG
 
+    # Piping --status/--diff into head or less must not raise BrokenPipeError.
+    with contextlib.suppress(AttributeError, ValueError):
+        signal.signal(signal.SIGPIPE, signal.SIG_DFL)
+
     parser = argparse.ArgumentParser(description="rclone bisync daemon for multiple cloud remotes")
     parser.add_argument("--config", metavar="PATH", help="Config file (default: $SYNC_ONEDRIVE_CONFIG or XDG path)")
     parser.add_argument("--once", action="store_true", help="Bisync every pair once and exit (systemd timer)")
@@ -574,14 +844,52 @@ def main():
     parser.add_argument("--pair", metavar="NAME", help="Restrict --resync to one pair (label or remote name)")
     parser.add_argument("--force", action="store_true", help="With --resync: re-baseline every pair, even initialized ones")
     parser.add_argument("--list", action="store_true", help="List configured pairs and their status, then exit")
+    parser.add_argument("--status", action="store_true",
+                        help="Show sync state, last results and pending local changes (offline, instant)")
+    parser.add_argument("--diff", action="store_true",
+                        help="Compare every pair against the remote file by file (needs network)")
+    parser.add_argument("--quick", action="store_true",
+                        help="With --diff: compare by size only instead of hashing (much faster)")
+    parser.add_argument("--limit", type=int, default=50, metavar="N",
+                        help="With --diff: max paths printed per category (default: 50)")
+    parser.add_argument("--json", action="store_true",
+                        help="With --status/--diff: machine-readable output")
     args = parser.parse_args()
 
     CFG = load_config(config_path(args.config))
     setup_logging(CFG)
 
+    # Query modes print structured output - keep the console handler out of it.
+    if args.list or args.status or args.diff:
+        for handler in log.handlers:
+            if getattr(handler, "stream", None) is sys.stdout:
+                handler.setLevel(logging.WARNING)
+
     if args.list:
         print_pairs()
         return
+
+    if args.status:
+        sys.exit(print_status(as_json=args.json))
+
+    if args.diff:
+        targets = CFG.pairs
+        if args.pair:
+            target = find_pair(args.pair)
+            if target is None:
+                log.error("No pair matches --pair %r. Known pairs:", args.pair)
+                print_pairs()
+                sys.exit(2)
+            targets = [target]
+        if not online():
+            print("Kein Netzwerkzugriff auf die Cloud - --diff braucht eine Verbindung.")
+            sys.exit(2)
+        reports = [diff_pair(p, limit=args.limit, quick=args.quick, as_json=args.json)
+                   for p in targets]
+        if args.json:
+            print(json.dumps(reports, indent=2, ensure_ascii=False))
+        clean = all(not any(v for k, v in r.items() if isinstance(v, list)) for r in reports)
+        sys.exit(0 if clean else 1)
 
     # Ensure every local directory and the listings dir exist before touching rclone.
     CFG.listings_dir.mkdir(parents=True, exist_ok=True)
@@ -619,6 +927,8 @@ def main():
     for p in CFG.pairs:
         log.info("  pair: %s  (%s -> %s)", p.name, p.remote, p.local)
 
+    record_daemon(True)
+
     # Initial sync of all pairs on startup
     sync_all("startup")
 
@@ -652,6 +962,7 @@ def main():
         stop_event.set()
         poll_thread.join(timeout=5)
         token_thread.join(timeout=5)
+        record_daemon(False)
         log.info("Shutdown complete")
 
 
