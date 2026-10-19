@@ -57,11 +57,13 @@ distro/
 setup-zsh.sh        # Install znap, Powerlevel10k and copy dotfiles
 setup-nvim.sh       # Copy NvChad config and run initial plugin sync
 setup-systemd.sh    # Install systemd user units and enable the agentlytics timer
+setup-claude.sh     # Copy Claude Code settings, status line and mods to ~/.claude
 home/               # Dotfiles and config files
   .zshrc
   .zshrc.dyle
   .p10k.zsh
   .gitconfig
+  .claude/          # Claude Code settings.json, statusline-command.sh, mods/
   .config/
     nvim/           # NvChad-based neovim config
     bat/
@@ -100,6 +102,7 @@ sh distro/install.debian-12.sh   # install packages
 sh setup-zsh.sh                  # configure zsh
 sh setup-nvim.sh                 # configure neovim
 sh setup-systemd.sh              # install systemd user units
+sh setup-claude.sh               # install Claude Code configuration
 ```
 
 ---

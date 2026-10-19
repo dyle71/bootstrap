@@ -1,0 +1,66 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(glab auth *)",
+      "Bash(glab issue *)",
+      "Bash(glab label *)",
+      "WebFetch(domain:gitlab.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(ls *)",
+      "Bash(git log *)",
+      "Bash(git show *)",
+      "Bash(git diff *)",
+      "Bash(grep *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(mkdir *)",
+      "Bash(cd *)"
+    ],
+    "deny": [
+      "Read(//home/dyle/.ssh/**)",
+      "Read(//home/dyle/.aws/**)",
+      "Read(**/.env)",
+      "Read(//home/dyle/.claude/.credentials.json)",
+      "Read(//home/dyle/.claude/projects/**)"
+    ]
+  },
+  "model": "opus",
+  "statusLine": {
+    "type": "command",
+    "command": "bash /home/dyle/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "frontend-design@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "gitlab@claude-plugins-official": true,
+    "prisma@claude-plugins-official": true,
+    "cloud-sql-postgresql@claude-plugins-official": true,
+    "humanizer@humanizer": true,
+    "mattpocock-skills@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "humanizer": {
+      "source": {
+        "source": "github",
+        "repo": "blader/humanizer"
+      }
+    }
+  },
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "medium"
+    },
+    "claude-fable-5-1": {
+      "effortLevel": "xhigh"
+    }
+  },
+  "tui": "fullscreen",
+  "theme": "dark",
+  "switchModelsOnFlag": true,
+  "env": {
+    "CLAUDE_CODE_PLUGIN_DIRS": "~/.claude/mods/context-bar"
+  }
+}
