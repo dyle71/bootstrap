@@ -62,4 +62,8 @@
 [commit]
   gpgsign = true
 [delta]
+  dark = true
   side-by-side = true
+  line-numbers = true
+  navigate = true
+  syntax-theme = Dracula
