@@ -17,7 +17,9 @@
   pr = remote prune origin
 
 [user]
-  signingkey = ~/.ssh/id_rsa
+  signingkey = /home/dyle/.ssh/id_rsa
+#  email = 
+#  name = 
 
 [color]
   branch = auto
@@ -33,7 +35,7 @@
   ff = only
 
 [core]
-  pager = sh -c 'command -v bat >/dev/null 2>&1 && exec bat --theme Dracula --style=changes || exec less -FRX'
+  pager = delta
   autocrlf = input
 
 [filter "lfs"]
@@ -47,15 +49,17 @@
 
 [maintenance]
   repo = /usr/local/src/znap-repos/znap
-  repo = ~/.znap-repos/znap
-  repo = ~/.znap-repos/ael-code/zsh-colored-man-pages
-  repo = ~/.znap-repos/romkatv/powerlevel10k
-  repo = ~/.znap-repos/zsh-users/zsh-autosuggestions
-  repo = ~/.znap-repos/zsh-users/zsh-completions
-  repo = ~/.znap-repos/zsh-users/zsh-syntax-highlighting
+  repo = /home/dyle/.znap-repos/znap
+  repo = /home/dyle/.znap-repos/ael-code/zsh-colored-man-pages
+  repo = /home/dyle/.znap-repos/romkatv/powerlevel10k
+  repo = /home/dyle/.znap-repos/zsh-users/zsh-autosuggestions
+  repo = /home/dyle/.znap-repos/zsh-users/zsh-completions
+  repo = /home/dyle/.znap-repos/zsh-users/zsh-syntax-highlighting
 
 [gpg]
   format = ssh
 
 [commit]
   gpgsign = true
+[delta]
+  side-by-side = true
