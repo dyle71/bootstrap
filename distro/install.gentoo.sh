@@ -7,6 +7,7 @@ PACKAGES="
     dev-vcs/git
     sys-apps/net-tools
     sys-apps/eza
+    dev-util/git-delta
     sys-apps/iproute2
     app-shells/zsh
     net-misc/curl

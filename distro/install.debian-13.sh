@@ -2,7 +2,7 @@
 # Install packages for Debian 13 (Trixie)
 set -e
 
-PACKAGES="git net-tools eza iproute2 zsh curl wget"
+PACKAGES="git net-tools eza git-delta iproute2 zsh curl wget"
 
 echo "Updating package lists..."
 sudo apt-get update -q

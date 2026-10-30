@@ -36,7 +36,7 @@ After the script finishes, log out and back in (or run `exec zsh`).
 
 ## Installed packages
 
-`neovim  git  net-tools  eza  iproute2  zsh  curl  wget`
+`neovim  git  net-tools  eza  git-delta  iproute2  zsh  curl  wget`
 
 ## Repository layout
 
