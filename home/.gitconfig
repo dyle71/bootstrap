@@ -69,3 +69,5 @@
   syntax-theme = Dracula
 [worktree]
 	guessRemote = true
+[fetch]
+	prune = true

@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+#
+# git-wtclone – clone a repository into a bare worktree layout
+#
+# Usage:  git wtclone <url> [directory]
+#
+# Result:
+#   <directory>/
+#   ├── .bare/        bare repository
+#   ├── .git          pointer to .bare
+#   └── <default>/    worktree of the default branch (e.g. main)
+
+set -euo pipefail
+
+die() {
+  echo "Error: $*" >&2
+  exit 1
+}
+
+[[ $# -ge 1 && $# -le 2 ]] || die "Usage: ${0##*/} <url> [directory]"
+url="$1"
+
+# Target directory: second argument or repository name derived from the URL
+# (works for https://host/user/repo.git and git@host:user/repo.git)
+name="${url%/}"
+name="${name##*/}"
+name="${name##*:}"
+name="${name%.git}"
+dir="${2:-$name}"
+
+[[ -n "$dir" ]]   || die "Could not derive a directory name from the URL."
+[[ ! -e "$dir" ]] || die "'$dir' already exists."
+
+# Remove the partially created directory if anything fails
+mkdir -- "$dir"
+success=0
+trap '(( success )) || { echo "Aborted, removing $dir" >&2; rm -rf -- "$dir"; }' EXIT
+
+g() { git -C "$dir" "$@"; }
+
+git clone --bare -- "$url" "$dir/.bare"
+echo "gitdir: ./.bare" > "$dir/.git"
+
+# Detect the remote's default branch instead of assuming "main"
+default_branch="$(g symbolic-ref --short HEAD)"
+
+# Add the fetch refspec – bare clones don't set one
+g config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+g config worktree.guessRemote true
+g fetch --prune origin
+g remote set-head origin --auto >/dev/null
+
+# A bare clone creates every server branch as a local branch (without
+# upstream). Delete all except the default branch; they still exist as
+# origin/* and are recreated on demand when adding a worktree.
+while IFS= read -r branch; do
+  [[ "$branch" == "$default_branch" ]] || g branch -D "$branch" >/dev/null
+done < <(g for-each-ref --format='%(refname:short)' refs/heads/)
+
+g branch --set-upstream-to="origin/$default_branch" "$default_branch" >/dev/null
+g worktree add "$default_branch" "$default_branch"
+
+success=1
+echo "Done: $dir/$default_branch"
