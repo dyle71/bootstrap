@@ -15,6 +15,7 @@
   rev = rev-parse --short HEAD
   lsquoted = "!f() { git -C \"$(git rev-parse --show-toplevel)\" ls-files -z | xargs -0 -n1 printf '%q\\n'; }; f"
   pr = remote prune origin
+	wtl = "!root=\"$(dirname \"$(git rev-parse --path-format=absolute --git-common-dir)\")\"; git worktree list | sed \"s|^$root/|./|\""
 
 [user]
   signingkey = /home/dyle/.ssh/id_rsa
