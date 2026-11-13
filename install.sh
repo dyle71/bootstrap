@@ -13,7 +13,8 @@
 #   6. Sets up neovim with NvChad
 #   7. Installs and enables the systemd user units (mounts, OneDrive sync, timers)
 #   8. Installs the Claude Code user configuration (~/.claude)
-#   9. Removes the temporary clone
+#   9. Installs the COSMIC desktop settings (~/.config/cosmic)
+#  10. Removes the temporary clone
 set -e
 
 REPO_URL="https://gitlab.com/dyle71/bootstrap.git"
@@ -149,28 +150,32 @@ esac
 # ---------------------------------------------------------------------------
 
 echo ""
-echo "=== Step 1/6: Installing packages for ${ID} ${VERSION_ID:-} ==="
+echo "=== Step 1/7: Installing packages for ${ID} ${VERSION_ID:-} ==="
 sh "${DISTRO_SCRIPT}"
 
 echo ""
-echo "=== Step 2/6: Setting up zsh ==="
+echo "=== Step 2/7: Setting up zsh ==="
 sh "${WORK_DIR}/setup-zsh.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 3/6: Setting up neovim ==="
+echo "=== Step 3/7: Setting up neovim ==="
 sh "${WORK_DIR}/setup-nvim.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 4/6: Installing helper applications ==="
+echo "=== Step 4/7: Installing helper applications ==="
 sh "${WORK_DIR}/setup-applications.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 5/6: Setting up systemd user units ==="
+echo "=== Step 5/7: Setting up systemd user units ==="
 sh "${WORK_DIR}/setup-systemd.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 6/6: Setting up Claude Code ==="
+echo "=== Step 6/7: Setting up Claude Code ==="
 sh "${WORK_DIR}/setup-claude.sh" "${WORK_DIR}"
+
+echo ""
+echo "=== Step 7/7: Setting up COSMIC desktop ==="
+sh "${WORK_DIR}/setup-cosmic.sh" "${WORK_DIR}"
 
 echo ""
 echo "========================================"

@@ -15,7 +15,9 @@ This will:
 3. Set up zsh with Powerlevel10k
 4. Set up neovim with NvChad
 5. Install and enable the systemd user units (rclone mounts, OneDrive sync, timers)
-6. Remove the temporary clone
+6. Set up Claude Code
+7. Install the COSMIC desktop settings (panel, dock, theme, ...)
+8. Remove the temporary clone
 
 After the script finishes, log out and back in (or run `exec zsh`).
 
@@ -58,6 +60,7 @@ setup-zsh.sh        # Install znap, Powerlevel10k and copy dotfiles
 setup-nvim.sh       # Copy NvChad config and run initial plugin sync
 setup-systemd.sh    # Install systemd user units and enable the agentlytics timer
 setup-claude.sh     # Copy Claude Code settings, status line and mods to ~/.claude
+setup-cosmic.sh     # Copy COSMIC desktop settings to ~/.config/cosmic
 home/               # Dotfiles and config files
   .zshrc
   .zshrc.dyle
@@ -67,6 +70,7 @@ home/               # Dotfiles and config files
   .config/
     nvim/           # NvChad-based neovim config
     bat/
+    cosmic/         # COSMIC desktop settings (panel, dock, theme, compositor, ...)
     systemd/
       user/         # systemd user units (services and timers)
 ```
@@ -94,6 +98,17 @@ systemctl --user list-timers                       # inspect scheduled timers
 journalctl --user -u onedrive-sync.service -n 50   # inspect a unit's log
 ```
 
+## COSMIC desktop settings
+
+`home/.config/cosmic/` is a copy of `~/.config/cosmic/` from the reference
+machine (one RON file per setting). `setup-cosmic.sh` copies it over the
+target's tree, so shipped keys are overwritten and everything else stays. It
+is skipped when COSMIC is not installed. To refresh the repo from the machine:
+
+```sh
+rm -rf home/.config/cosmic && cp -a ~/.config/cosmic home/.config/
+```
+
 ## Running steps individually
 
 ```sh
@@ -103,6 +118,7 @@ sh setup-zsh.sh                  # configure zsh
 sh setup-nvim.sh                 # configure neovim
 sh setup-systemd.sh              # install systemd user units
 sh setup-claude.sh               # install Claude Code configuration
+sh setup-cosmic.sh               # install COSMIC desktop settings
 ```
 
 ---
