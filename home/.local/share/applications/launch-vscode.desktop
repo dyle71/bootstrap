@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Visual Studio Code (neues Fenster)
+Exec=code --new-window
+Icon=/usr/share/pixmaps/vscode.png
+Terminal=false
+Categories=Utility;

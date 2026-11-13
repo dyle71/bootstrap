@@ -18,7 +18,8 @@ This will:
 6. Set up Claude Code
 7. Install the user fonts (JetBrainsMono NF Fixed for prompt and terminal)
 8. Install the COSMIC desktop settings (panel, dock, theme, terminal, ...)
-9. Remove the temporary clone
+9. Install the Qt/KDE theme settings (Breeze Dark for Dolphin & co. under COSMIC)
+10. Remove the temporary clone
 
 After the script finishes, log out and back in (or run `exec zsh`).
 
@@ -40,6 +41,10 @@ After the script finishes, log out and back in (or run `exec zsh`).
 ## Installed packages
 
 `neovim  git  net-tools  eza  git-delta  iproute2  zsh  curl  wget`
+
+On desktop machines additionally (Qt/KDE theme integration, names vary per distro):
+
+`plasma-integration  breeze  qt6-wayland  qt6ct`
 
 ## Repository layout
 
@@ -63,6 +68,7 @@ setup-systemd.sh    # Install systemd user units and enable the agentlytics time
 setup-claude.sh     # Copy Claude Code settings, status line and mods to ~/.claude
 setup-fonts.sh      # Copy user fonts to ~/.local/share/fonts and refresh the font cache
 setup-cosmic.sh     # Copy COSMIC desktop settings to ~/.config/cosmic
+setup-qt.sh         # Qt/KDE theme: QT_QPA_PLATFORMTHEME=kde, kdeglobals, qt6ct
 home/               # Dotfiles and config files
   .zshrc
   .zshrc.dyle
@@ -73,6 +79,9 @@ home/               # Dotfiles and config files
     nvim/           # NvChad-based neovim config
     bat/
     cosmic/         # COSMIC desktop settings (panel, dock, theme, compositor, ...)
+    environment.d/  # qt-theme.conf: QT_QPA_PLATFORMTHEME=kde for the desktop session
+    kdeglobals      # KDE colors (Breeze Dark), widget style, icons, fonts
+    qt6ct/          # qt6ct config and Breeze Dark color scheme
     systemd/
       user/         # systemd user units (services and timers)
   .local/

@@ -15,7 +15,8 @@
 #   8. Installs the Claude Code user configuration (~/.claude)
 #   9. Installs the user fonts (~/.local/share/fonts)
 #  10. Installs the COSMIC desktop settings (~/.config/cosmic)
-#  11. Removes the temporary clone
+#  11. Installs the Qt/KDE theme settings (Breeze Dark for Dolphin & co.)
+#  12. Removes the temporary clone
 set -e
 
 REPO_URL="https://gitlab.com/dyle71/bootstrap.git"
@@ -151,36 +152,40 @@ esac
 # ---------------------------------------------------------------------------
 
 echo ""
-echo "=== Step 1/8: Installing packages for ${ID} ${VERSION_ID:-} ==="
+echo "=== Step 1/9: Installing packages for ${ID} ${VERSION_ID:-} ==="
 sh "${DISTRO_SCRIPT}"
 
 echo ""
-echo "=== Step 2/8: Setting up zsh ==="
+echo "=== Step 2/9: Setting up zsh ==="
 sh "${WORK_DIR}/setup-zsh.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 3/8: Setting up neovim ==="
+echo "=== Step 3/9: Setting up neovim ==="
 sh "${WORK_DIR}/setup-nvim.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 4/8: Installing helper applications ==="
+echo "=== Step 4/9: Installing helper applications ==="
 sh "${WORK_DIR}/setup-applications.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 5/8: Setting up systemd user units ==="
+echo "=== Step 5/9: Setting up systemd user units ==="
 sh "${WORK_DIR}/setup-systemd.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 6/8: Setting up Claude Code ==="
+echo "=== Step 6/9: Setting up Claude Code ==="
 sh "${WORK_DIR}/setup-claude.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 7/8: Installing fonts ==="
+echo "=== Step 7/9: Installing fonts ==="
 sh "${WORK_DIR}/setup-fonts.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 8/8: Setting up COSMIC desktop ==="
+echo "=== Step 8/9: Setting up COSMIC desktop ==="
 sh "${WORK_DIR}/setup-cosmic.sh" "${WORK_DIR}"
+
+echo ""
+echo "=== Step 9/9: Setting up Qt/KDE theme ==="
+sh "${WORK_DIR}/setup-qt.sh" "${WORK_DIR}"
 
 echo ""
 echo "========================================"
