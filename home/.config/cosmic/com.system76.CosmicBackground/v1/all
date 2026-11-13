@@ -1,6 +1,6 @@
 (
     output: "all",
-    source: Path("/usr/share/backgrounds/cosmic/orion_nebula_nasa_heic0601a.jpg"),
+    source: Path("/home/dyle/Documents/Cloud/dyle@cloud.dyle.org/Media/Wallpapers/SM/Space/wallpaper-mania.com_High_resolution_wallpaper_background_ID_77701885625.jpg"),
     filter_by_theme: true,
     rotation_frequency: 300,
     filter_method: Lanczos,
