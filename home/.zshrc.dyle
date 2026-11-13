@@ -84,3 +84,4 @@ alias b='bat'
 alias vim='nvim'
 alias v='nvim'
 
+[ -f ~/.zshrc.dyle.secrets ] && source  ~/.zshrc.dyle.secrets
