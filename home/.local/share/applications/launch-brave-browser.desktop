@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Brave (neues Fenster)
+Exec=brave --new-window
+Icon=/usr/share/icons/hicolor/256x256/apps/brave-desktop.png
+Terminal=false
+Categories=Utility;

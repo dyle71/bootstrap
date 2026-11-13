@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=COSMIC Terminal (neues Fenster)
+Exec=cosmic-term
+Icon=/usr/share/icons/hicolor/256x256/apps/com.system76.CosmicTerm.svg
+Terminal=false
+Categories=Utility;

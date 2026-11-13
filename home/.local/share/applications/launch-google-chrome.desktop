@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Google Chrome (neues Fenster)
+Exec=/usr/bin/google-chrome-stable --new-window
+Icon=/usr/share/icons/hicolor/256x256/apps/google-chrome.png
+Terminal=false
+Categories=Utility;

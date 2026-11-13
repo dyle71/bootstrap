@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Firefox (neues Fenster)
+Exec=/usr/lib/firefox/firefox --new-window
+Icon=/usr/share/icons/hicolor/scalable/apps/firefox.svg
+Terminal=false
+Categories=Utility;
