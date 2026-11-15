@@ -3,7 +3,7 @@
 # Note: eza is not in the default Ubuntu 22.04 repos and requires an external source.
 set -e
 
-PACKAGES="git net-tools iproute2 zsh curl wget gpg"
+PACKAGES="git net-tools iproute2 zsh curl wget gpg fd-find ripgrep ncdu"
 
 echo "Updating package lists..."
 sudo apt-get update -q
@@ -39,3 +39,7 @@ echo "deb [signed-by=/etc/apt/keyrings/gierens.gpg] http://deb.gierens.de stable
 sudo chmod 644 /etc/apt/keyrings/gierens.gpg /etc/apt/sources.list.d/gierens.list
 sudo apt-get update -q
 sudo apt-get install -y eza
+
+# Debian/Ubuntu ship fd as 'fdfind' (name clash with another package) - provide 'fd'.
+echo "Linking fdfind to /usr/local/bin/fd ..."
+sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd

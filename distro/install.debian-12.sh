@@ -2,7 +2,7 @@
 # Install packages for Debian 12 (Bookworm)
 set -e
 
-PACKAGES="git net-tools eza iproute2 zsh curl wget"
+PACKAGES="git net-tools eza iproute2 zsh curl wget fd-find ripgrep ncdu"
 
 echo "Updating package lists..."
 sudo apt-get update -q
@@ -27,3 +27,7 @@ curl -L --fail "https://github.com/dandavison/delta/releases/download/${DELTA_VE
 tar -C "${DELTA_TMP}" --strip-components=1 -xzf "${DELTA_TMP}/delta.tar.gz"
 sudo install -m 755 "${DELTA_TMP}/delta" /usr/local/bin/delta
 rm -rf "${DELTA_TMP}"
+
+# Debian/Ubuntu ship fd as 'fdfind' (name clash with another package) - provide 'fd'.
+echo "Linking fdfind to /usr/local/bin/fd ..."
+sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd

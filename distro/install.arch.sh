@@ -2,7 +2,7 @@
 # Install packages for Arch Linux
 set -e
 
-PACKAGES="neovim git net-tools eza git-delta iproute2 zsh curl wget"
+PACKAGES="neovim git net-tools eza git-delta iproute2 zsh curl wget fd ripgrep ncdu"
 
 echo "Updating package databases..."
 sudo pacman -Sy --noconfirm

@@ -12,6 +12,9 @@ PACKAGES="
     app-shells/zsh
     net-misc/curl
     net-misc/wget
+    sys-apps/fd
+    sys-apps/ripgrep
+    sys-fs/ncdu
 "
 
 echo "Syncing portage tree..."
