@@ -14,7 +14,7 @@
 #
 # Skipped on machines without COSMIC (no cosmic-comp and no ~/.config/cosmic).
 #
-# When called from install.sh the bootstrap directory is passed as $1.
+# When called from install-de.sh the bootstrap directory is passed as $1.
 set -e
 
 BOOTSTRAP_DIR="${1:-$(dirname "$(readlink -f "$0")")}"

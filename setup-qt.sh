@@ -19,7 +19,7 @@
 # Requires plasma-integration (KDE platform theme) and breeze to take effect.
 # Skipped on machines without a desktop (no COSMIC, Plasma or Dolphin).
 #
-# When called from install.sh the bootstrap directory is passed as $1.
+# When called from install-de.sh the bootstrap directory is passed as $1.
 set -e
 
 BOOTSTRAP_DIR="${1:-$(dirname "$(readlink -f "$0")")}"

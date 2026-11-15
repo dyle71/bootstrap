@@ -1,5 +1,9 @@
 #!/bin/sh
-# Bootstrap installer for dyle's Linux environment.
+# Bootstrap installer for dyle's Linux environment (server side).
+#
+# Sets up everything that is useful on a headless machine: packages, shell,
+# editor, helper scripts, systemd user units and Claude Code. Desktop parts
+# (fonts, COSMIC, Qt/KDE theme, graphical-session units) live in install-de.sh.
 #
 # Usage (one-liner, no local clone needed):
 #   curl https://gitlab.com/dyle71/bootstrap/-/raw/main/install.sh | sh
@@ -11,12 +15,9 @@
 #   4. Runs the distro-specific package install script
 #   5. Sets up zsh with Powerlevel10k
 #   6. Sets up neovim with NvChad
-#   7. Installs and enables the systemd user units (mounts, OneDrive sync, timers)
+#   7. Installs and enables the server systemd user units (mounts, OneDrive sync, timers)
 #   8. Installs the Claude Code user configuration (~/.claude)
-#   9. Installs the user fonts (~/.local/share/fonts)
-#  10. Installs the COSMIC desktop settings (~/.config/cosmic)
-#  11. Installs the Qt/KDE theme settings (Breeze Dark for Dolphin & co.)
-#  12. Removes the temporary clone
+#   9. Removes the temporary clone
 set -e
 
 REPO_URL="https://gitlab.com/dyle71/bootstrap.git"
@@ -152,44 +153,35 @@ esac
 # ---------------------------------------------------------------------------
 
 echo ""
-echo "=== Step 1/9: Installing packages for ${ID} ${VERSION_ID:-} ==="
+echo "=== Step 1/6: Installing packages for ${ID} ${VERSION_ID:-} ==="
 sh "${DISTRO_SCRIPT}"
 
 echo ""
-echo "=== Step 2/9: Setting up zsh ==="
+echo "=== Step 2/6: Setting up zsh ==="
 sh "${WORK_DIR}/setup-zsh.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 3/9: Setting up neovim ==="
+echo "=== Step 3/6: Setting up neovim ==="
 sh "${WORK_DIR}/setup-nvim.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 4/9: Installing helper applications ==="
+echo "=== Step 4/6: Installing helper applications ==="
 sh "${WORK_DIR}/setup-applications.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 5/9: Setting up systemd user units ==="
-sh "${WORK_DIR}/setup-systemd.sh" "${WORK_DIR}"
+echo "=== Step 5/6: Setting up systemd user units ==="
+sh "${WORK_DIR}/setup-systemd.sh" "${WORK_DIR}" server
 
 echo ""
-echo "=== Step 6/9: Setting up Claude Code ==="
+echo "=== Step 6/6: Setting up Claude Code ==="
 sh "${WORK_DIR}/setup-claude.sh" "${WORK_DIR}"
-
-echo ""
-echo "=== Step 7/9: Installing fonts ==="
-sh "${WORK_DIR}/setup-fonts.sh" "${WORK_DIR}"
-
-echo ""
-echo "=== Step 8/9: Setting up COSMIC desktop ==="
-sh "${WORK_DIR}/setup-cosmic.sh" "${WORK_DIR}"
-
-echo ""
-echo "=== Step 9/9: Setting up Qt/KDE theme ==="
-sh "${WORK_DIR}/setup-qt.sh" "${WORK_DIR}"
 
 echo ""
 echo "========================================"
 echo " Bootstrap complete!"
 echo " Please log out and back in, or run:"
 echo "   exec zsh"
+echo ""
+echo " Desktop machine? Also run install-de.sh:"
+echo "   curl https://gitlab.com/dyle71/bootstrap/-/raw/main/install-de.sh | sh"
 echo "========================================"

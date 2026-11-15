@@ -27,17 +27,3 @@ curl -L --fail "https://github.com/dandavison/delta/releases/download/${DELTA_VE
 tar -C "${DELTA_TMP}" --strip-components=1 -xzf "${DELTA_TMP}/delta.tar.gz"
 sudo install -m 755 "${DELTA_TMP}/delta" /usr/local/bin/delta
 rm -rf "${DELTA_TMP}"
-
-# Qt/KDE theme integration for KDE programs (Dolphin & co.) outside of Plasma,
-# see setup-qt.sh. Only on desktop machines; installed one by one so a package
-# missing in this release does not abort the bootstrap.
-QT_PACKAGES="plasma-integration breeze qt6-wayland qt6ct"
-if [ -n "${XDG_CURRENT_DESKTOP:-}" ] \
-    || command -v cosmic-comp > /dev/null 2>&1 \
-    || command -v plasmashell > /dev/null 2>&1; then
-    for pkg in ${QT_PACKAGES}; do
-        echo "Installing: ${pkg}"
-        sudo apt-get install -y "${pkg}" \
-            || echo "WARNING: ${pkg} is not available here; Qt programs may not use Breeze Dark."
-    done
-fi

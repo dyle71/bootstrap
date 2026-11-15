@@ -4,6 +4,8 @@ Bootstrap my ideal Linux shell environment in one command.
 
 ## Quick install
 
+Server side (any machine, headless included):
+
 ```sh
 curl https://gitlab.com/dyle71/bootstrap/-/raw/main/install.sh | sh
 ```
@@ -14,14 +16,29 @@ This will:
 2. Install all required packages
 3. Set up zsh with Powerlevel10k
 4. Set up neovim with NvChad
-5. Install and enable the systemd user units (rclone mounts, OneDrive sync, timers)
-6. Set up Claude Code
-7. Install the user fonts (JetBrainsMono NF Fixed for prompt and terminal)
-8. Install the COSMIC desktop settings (panel, dock, theme, terminal, ...)
-9. Install the Qt/KDE theme settings (Breeze Dark for Dolphin & co. under COSMIC)
-10. Remove the temporary clone
+5. Install the helper scripts into `~/Applications`
+6. Install and enable the server systemd user units (rclone mounts, OneDrive sync, timers)
+7. Set up Claude Code
+8. Remove the temporary clone
 
 After the script finishes, log out and back in (or run `exec zsh`).
+
+Desktop environment (X11/Wayland), additionally on desktops and laptops:
+
+```sh
+curl https://gitlab.com/dyle71/bootstrap/-/raw/main/install-de.sh | sh
+```
+
+This will:
+
+1. Install the Qt/KDE integration packages (Breeze Dark for Dolphin & co.)
+2. Install the user fonts (JetBrainsMono NF Fixed for prompt and terminal)
+3. Install the COSMIC desktop settings (panel, dock, theme, terminal, ...)
+4. Install the Qt/KDE theme settings (Breeze Dark for KDE apps under COSMIC)
+5. Install and enable the desktop systemd user units (`laptop-primary-monitor`)
+6. Remove the temporary clone
+
+Log out and back in afterwards.
 
 ## Supported systems
 
@@ -42,14 +59,15 @@ After the script finishes, log out and back in (or run `exec zsh`).
 
 `neovim  git  net-tools  eza  git-delta  iproute2  zsh  curl  wget`
 
-On desktop machines additionally (Qt/KDE theme integration, names vary per distro):
+`install-de.sh` additionally installs (Qt/KDE theme integration, names vary per distro):
 
 `plasma-integration  breeze  qt6-wayland  qt6ct`
 
 ## Repository layout
 
 ```text
-install.sh          # Entry point for curl | sh
+install.sh          # Entry point for curl | sh (server side)
+install-de.sh       # Entry point for curl | sh (desktop environment)
 distro/
   install.debian-12.sh
   install.debian-13.sh
@@ -64,7 +82,7 @@ distro/
   install.opensuse.sh
 setup-zsh.sh        # Install znap, Powerlevel10k and copy dotfiles
 setup-nvim.sh       # Copy NvChad config and run initial plugin sync
-setup-systemd.sh    # Install systemd user units and enable the agentlytics timer
+setup-systemd.sh    # Install and enable systemd user units (mode: server | desktop)
 setup-claude.sh     # Copy Claude Code settings, status line and mods to ~/.claude
 setup-fonts.sh      # Copy user fonts to ~/.local/share/fonts and refresh the font cache
 setup-cosmic.sh     # Copy COSMIC desktop settings to ~/.config/cosmic
@@ -93,16 +111,19 @@ home/               # Dotfiles and config files
 
 The `.service` and `.timer` files under `home/.config/systemd/user/` are
 copied to `~/.config/systemd/user/` by `setup-systemd.sh`, which then enables
-every unit that has an `[Install]` section and runs `loginctl enable-linger`
-so they keep working without an active login session. These mirror the units
-running on the reference machine:
+every unit that has an `[Install]` section. Units with
+`WantedBy=graphical-session.target` are desktop units and are only installed
+by `install-de.sh` (`setup-systemd.sh <dir> desktop`); all others are server
+units, installed by `install.sh` (`setup-systemd.sh <dir> server`), which also
+runs `loginctl enable-linger` so they keep working without an active login
+session. These mirror the units running on the reference machine:
 
 - `htl-teams-it-management.service`, `htl-teams-lehrer-if-mt.service` — rclone mounts of the HTL Teams document libraries
 - `onedrive-sync.service` — continuous OneDrive bisync (via `~/Applications/sync-onedrive`)
 - `onedrive-periodic.service` + `.timer` — periodic bisync fallback
 - `rclone-token-refresh.service` + `.timer` — daily `rclone lsd` to keep the OAuth tokens fresh
 - `agentlytics.service` + `.timer` — daily agentlytics collect job
-- `laptop-primary-monitor.service` — COSMIC only: watches DRM hotplug events and
+- `laptop-primary-monitor.service` (desktop) — COSMIC only: watches DRM hotplug events and
   keeps the internal laptop panel enabled and Xwayland-primary when an external
   monitor is plugged in (see below)
 
@@ -153,10 +174,15 @@ journalctl --user -u laptop-primary-monitor.service -f   # watch it react to hot
 sh distro/install.debian-12.sh   # install packages
 sh setup-zsh.sh                  # configure zsh
 sh setup-nvim.sh                 # configure neovim
-sh setup-systemd.sh              # install systemd user units
+sh setup-applications.sh         # install helper scripts into ~/Applications
+sh setup-systemd.sh . server     # install server systemd user units
 sh setup-claude.sh               # install Claude Code configuration
+
+# Desktop environment:
 sh setup-fonts.sh                # install user fonts
 sh setup-cosmic.sh               # install COSMIC desktop settings
+sh setup-qt.sh                   # install Qt/KDE theme settings
+sh setup-systemd.sh . desktop    # install desktop systemd user units
 ```
 
 ---
