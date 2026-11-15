@@ -7,6 +7,11 @@
 #       QT_QPA_PLATFORMTHEME=kde for the systemd user session. Programs started
 #       by the desktop (launcher, dock) inherit it, so Qt loads the KDE platform
 #       theme (plasma-integration) which reads ~/.config/kdeglobals.
+#   ~/.zprofile
+#       COSMIC's start-cosmic does not use environment.d: it runs "$SHELL -l"
+#       and, if QT_QPA_PLATFORMTHEME is still unset, sets it to cosmic/qt5ct
+#       itself. A block in ~/.zprofile therefore exports qt-theme.conf in the
+#       login shell before start-cosmic decides. Added once, existing content kept.
 #   ~/.config/kdeglobals
 #       Color scheme, widget style, icon theme and fonts. Only the theme
 #       related groups are shipped; they are merged key by key with
@@ -66,6 +71,22 @@ EOF
 echo "Installing Qt platform theme environment into ${DST}/environment.d ..."
 mkdir -p "${DST}/environment.d"
 cp -v "${SRC}/environment.d/qt-theme.conf" "${DST}/environment.d/"
+
+ZPROFILE="${HOME}/.zprofile"
+ZPROFILE_MARK="# bootstrap setup-qt.sh: Qt platform theme for the desktop session"
+if ! grep -qF "${ZPROFILE_MARK}" "${ZPROFILE}" 2> /dev/null; then
+    echo "Adding Qt platform theme export to ${ZPROFILE} ..."
+    cat >> "${ZPROFILE}" <<'EOF'
+
+# bootstrap setup-qt.sh: Qt platform theme for the desktop session
+# start-cosmic ignores environment.d and picks its own theme unless this is set.
+if [ -r "${HOME}/.config/environment.d/qt-theme.conf" ]; then
+    set -a
+    . "${HOME}/.config/environment.d/qt-theme.conf"
+    set +a
+fi
+EOF
+fi
 
 echo "Installing KDE theme settings into ${DST}/kdeglobals ..."
 if command -v kwriteconfig6 > /dev/null 2>&1; then
