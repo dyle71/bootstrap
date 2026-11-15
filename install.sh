@@ -6,7 +6,7 @@
 # (fonts, COSMIC, Qt/KDE theme, graphical-session units) live in install-de.sh.
 #
 # Usage (one-liner, no local clone needed):
-#   curl https://gitlab.com/dyle71/bootstrap/-/raw/main/install.sh | sh
+#   curl https://raw.githubusercontent.com/dyle71/bootstrap/main/install.sh | sh
 #
 # What this script does:
 #   1. Detects the OS and version
@@ -20,7 +20,7 @@
 #   9. Removes the temporary clone
 set -e
 
-REPO_URL="https://gitlab.com/dyle71/bootstrap.git"
+REPO_URL="https://github.com/dyle71/bootstrap.git"
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -183,5 +183,5 @@ echo " Please log out and back in, or run:"
 echo "   exec zsh"
 echo ""
 echo " Desktop machine? Also run install-de.sh:"
-echo "   curl https://gitlab.com/dyle71/bootstrap/-/raw/main/install-de.sh | sh"
+echo "   curl https://raw.githubusercontent.com/dyle71/bootstrap/main/install-de.sh | sh"
 echo "========================================"

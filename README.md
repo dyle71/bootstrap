@@ -7,7 +7,7 @@ Bootstrap my ideal Linux shell environment in one command.
 Server side (any machine, headless included):
 
 ```sh
-curl https://gitlab.com/dyle71/bootstrap/-/raw/main/install.sh | sh
+curl https://raw.githubusercontent.com/dyle71/bootstrap/main/install.sh | sh
 ```
 
 This will:
@@ -26,7 +26,7 @@ After the script finishes, log out and back in (or run `exec zsh`).
 Desktop environment (X11/Wayland), additionally on desktops and laptops:
 
 ```sh
-curl https://gitlab.com/dyle71/bootstrap/-/raw/main/install-de.sh | sh
+curl https://raw.githubusercontent.com/dyle71/bootstrap/main/install-de.sh | sh
 ```
 
 This will:

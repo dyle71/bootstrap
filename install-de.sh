@@ -5,7 +5,7 @@
 # sets up the server side (shell, editor, tools, systemd user units).
 #
 # Usage (one-liner, no local clone needed):
-#   curl https://gitlab.com/dyle71/bootstrap/-/raw/main/install-de.sh | sh
+#   curl https://raw.githubusercontent.com/dyle71/bootstrap/main/install-de.sh | sh
 #
 # What this script does:
 #   1. Detects the OS
@@ -20,7 +20,7 @@
 #   9. Removes the temporary clone
 set -e
 
-REPO_URL="https://gitlab.com/dyle71/bootstrap.git"
+REPO_URL="https://github.com/dyle71/bootstrap.git"
 
 error() {
     echo "ERROR: $*" >&2
