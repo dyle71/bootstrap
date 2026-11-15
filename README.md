@@ -138,7 +138,7 @@ journalctl --user -u onedrive-sync.service -n 50   # inspect a unit's log
 
 ## COSMIC desktop settings
 
-`home/.config/cosmic/` is a copy of `~/.config/cosmic/` from the reference
+Part of `install-de.sh`. `home/.config/cosmic/` is a copy of `~/.config/cosmic/` from the reference
 machine (one RON file per setting). `setup-cosmic.sh` copies it over the
 target's tree, so shipped keys are overwritten and everything else stays. It
 is skipped when COSMIC is not installed. To refresh the repo from the machine:
@@ -148,8 +148,8 @@ rm -rf home/.config/cosmic && cp -a ~/.config/cosmic home/.config/
 ```
 
 The COSMIC terminal is set to the `JetBrainsMono NF Fixed` font, which
-`setup-fonts.sh` installs from `home/.local/share/fonts/` (run before
-`setup-cosmic.sh`).
+`setup-fonts.sh` installs from `home/.local/share/fonts/` (`install-de.sh`
+runs it before `setup-cosmic.sh`).
 
 ### Laptop panel stays on and primary (COSMIC)
 
