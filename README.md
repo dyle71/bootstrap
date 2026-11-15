@@ -102,6 +102,9 @@ running on the reference machine:
 - `onedrive-periodic.service` + `.timer` — periodic bisync fallback
 - `rclone-token-refresh.service` + `.timer` — daily `rclone lsd` to keep the OAuth tokens fresh
 - `agentlytics.service` + `.timer` — daily agentlytics collect job
+- `laptop-primary-monitor.service` — COSMIC only: watches DRM hotplug events and
+  keeps the internal laptop panel enabled and Xwayland-primary when an external
+  monitor is plugged in (see below)
 
 Units that need rclone remotes configured will fail to *start* until that
 config exists; the mounts and syncs depend on the `OneDrive HTL Villach:`,
@@ -126,6 +129,22 @@ rm -rf home/.config/cosmic && cp -a ~/.config/cosmic home/.config/
 The COSMIC terminal is set to the `JetBrainsMono NF Fixed` font, which
 `setup-fonts.sh` installs from `home/.local/share/fonts/` (run before
 `setup-cosmic.sh`).
+
+### Laptop panel stays on and primary (COSMIC)
+
+Wayland has no global "primary monitor". COSMIC remembers a layout per monitor
+combination in `~/.local/state/cosmic-comp/outputs.ron` (runtime state, not
+shipped here) and only knows *Xwayland primary* for X11 apps. Panel and dock are
+shown on all outputs (`output` = `All`).
+
+`~/Applications/laptop-primary-monitor.sh` uses `cosmic-randr` to enable the
+internal panel (`eDP-1`/`eDP-2`, auto-detected) and make it the Xwayland primary.
+It never enables the panel while the lid is closed. `laptop-primary-monitor.service`
+runs it with `--watch` after every hotplug.
+
+```sh
+journalctl --user -u laptop-primary-monitor.service -f   # watch it react to hotplugs
+```
 
 ## Running steps individually
 

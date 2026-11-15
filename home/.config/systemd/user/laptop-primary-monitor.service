@@ -1,0 +1,16 @@
+# User unit. Installed to ~/.config/systemd/user/ by setup-systemd.sh.
+# Keeps the internal laptop panel enabled and Xwayland-primary whenever an
+# external monitor (HDMI, DP, USB-C) is plugged in. COSMIC only.
+[Unit]
+Description=Keep the laptop panel enabled and primary on monitor hotplug (COSMIC)
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=XDG_CURRENT_DESKTOP=COSMIC
+
+[Service]
+ExecStart=%h/Applications/laptop-primary-monitor.sh --watch
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target
