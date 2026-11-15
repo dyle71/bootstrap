@@ -19,7 +19,21 @@ DST="${HOME}/.local/share/fonts"
 
 echo "Copying fonts into ${DST} ..."
 mkdir -p "${DST}"
-cp -rv "${SRC}/." "${DST}/"
+# Running programs (e.g. cosmic-term) mmap the font files. Overwriting a
+# font in place truncates the mapped file and kills them with SIGBUS, so
+# unchanged fonts are skipped and changed ones are replaced atomically
+# (copy to a temp file, then rename: mapped readers keep the old inode).
+(cd "${SRC}" && find . -type f) | while IFS= read -r f; do
+    src="${SRC}/${f#./}"
+    dst="${DST}/${f#./}"
+    if [ -f "${dst}" ] && cmp -s "${src}" "${dst}"; then
+        continue
+    fi
+    mkdir -p "$(dirname "${dst}")"
+    cp "${src}" "${dst}.tmp.$$"
+    mv -f "${dst}.tmp.$$" "${dst}"
+    echo "installed: ${dst}"
+done
 
 if command -v fc-cache > /dev/null 2>&1; then
     echo "Refreshing font cache..."
