@@ -16,10 +16,22 @@ export TERM=xterm-256color
 export GPG_TTY=$(tty)
 export BAT_THEME="Dracula"
 
+# Sprache (Meldungen, UI) US-Englisch, alle Formate Deutsch (Österreich).
+# LC_ALL bleibt unset, sonst würde es alle LC_*-Variablen überschreiben.
+unset LC_ALL
 export LANG="en_US.UTF-8"
-export LC_ALL="en_US.UTF-8"
+export LC_MESSAGES="en_US.UTF-8"
+export LC_CTYPE="de_AT.UTF-8"
+export LC_NUMERIC="de_AT.UTF-8"
 export LC_TIME="de_AT.UTF-8"
 export LC_COLLATE="de_AT.UTF-8"
+export LC_MONETARY="de_AT.UTF-8"
+export LC_PAPER="de_AT.UTF-8"
+export LC_NAME="de_AT.UTF-8"
+export LC_ADDRESS="de_AT.UTF-8"
+export LC_TELEPHONE="de_AT.UTF-8"
+export LC_MEASUREMENT="de_AT.UTF-8"
+export LC_IDENTIFICATION="de_AT.UTF-8"
 
 HISTFILE=~/.histfile
 HISTSIZE=10000
