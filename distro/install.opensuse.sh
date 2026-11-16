@@ -10,7 +10,7 @@ sudo zypper --non-interactive refresh
 echo "Installing: ${PACKAGES}"
 sudo zypper --non-interactive install ${PACKAGES}
 
-# git-delta is not packaged for every Leap release; the rest of the setup works without it.
-echo "Installing: git-delta"
-sudo zypper --non-interactive install git-delta \
-    || echo "WARNING: git-delta is not available here; 'pager = delta' in .gitconfig needs it."
+# difftastic is only packaged for Tumbleweed; the rest of the setup works without it.
+echo "Installing: difftastic"
+sudo zypper --non-interactive install difftastic \
+    || echo "WARNING: difftastic is not available here; 'diff.external = difft' in .gitconfig needs it."

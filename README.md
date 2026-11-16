@@ -57,7 +57,7 @@ Log out and back in afterwards.
 
 ## Installed packages
 
-`neovim  git  net-tools  eza  git-delta  iproute2  zsh  curl  wget`
+`neovim  git  net-tools  eza  difftastic  iproute2  zsh  curl  wget`
 `fd  ripgrep  ncdu`
 
 On Debian/Ubuntu fd is packaged as `fd-find` with the binary `fdfind`; the

@@ -16,7 +16,7 @@
   lsquoted = "!f() { git -C \"$(git rev-parse --show-toplevel)\" ls-files -z | xargs -0 -n1 printf '%q\\n'; }; f"
   pr = remote prune origin
   wt = worktree
-  ft = fetch
+  ft = fetch -v
 
 [user]
   signingkey = /home/dyle/.ssh/id_rsa
@@ -37,7 +37,6 @@
   ff = only
 
 [core]
-  pager = delta
   autocrlf = input
 
 [filter "lfs"]
@@ -63,13 +62,9 @@
 
 [commit]
   gpgsign = true
-[delta]
-  dark = true
-  side-by-side = true
-  line-numbers = true
-  navigate = true
-  syntax-theme = Dracula
 [worktree]
 	guessRemote = true
 [fetch]
 	prune = true
+[diff]
+	external = difft --display=inline
