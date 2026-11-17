@@ -10,7 +10,8 @@
 #
 # The custom launch-*.desktop files used as dock favorites (open a new window
 # instead of focusing an existing one) are installed into
-# ~/.local/share/applications.
+# ~/.local/share/applications, together with an override of the Nextcloud
+# desktop entry that starts it without QT_QPA_PLATFORMTHEME (see setup-qt.sh).
 #
 # Skipped on machines without COSMIC (no cosmic-comp and no ~/.config/cosmic).
 #
@@ -38,7 +39,7 @@ cp -rv "${SRC}/." "${DST}/"
 APPS_SRC="${BOOTSTRAP_DIR}/home/.local/share/applications"
 APPS_DST="${HOME}/.local/share/applications"
 if [ -d "${APPS_SRC}" ]; then
-    echo "Copying dock launchers into ${APPS_DST} ..."
+    echo "Copying dock launchers and desktop overrides into ${APPS_DST} ..."
     mkdir -p "${APPS_DST}"
     cp -v "${APPS_SRC}"/*.desktop "${APPS_DST}/"
 fi

@@ -108,6 +108,7 @@ home/               # Dotfiles and config files
       user/         # systemd user units (services and timers)
   .local/
     share/
+      applications/ # Dock launchers (launch-*.desktop), Nextcloud entry without QT_QPA_PLATFORMTHEME
       fonts/        # JetBrainsMono NF Fixed (Nerd Font used by p10k and COSMIC terminal)
 ```
 
@@ -170,6 +171,20 @@ runs it with `--watch` after every hotplug.
 ```sh
 journalctl --user -u laptop-primary-monitor.service -f   # watch it react to hotplugs
 ```
+
+### Nextcloud tray icon (COSMIC)
+
+With `QT_QPA_PLATFORMTHEME=kde` and the breeze-dark icon theme, Nextcloud only
+passes the icon name `state-ok` to the tray (no pixmap). The COSMIC panel looks
+that name up in its own icon theme (Cosmic, Pop, hicolor), where it does not
+exist, so the tray icon shows up broken. Without the KDE platform theme
+Nextcloud sends the icon as a pixmap, which COSMIC displays correctly.
+Nextcloud is therefore started with `env -u QT_QPA_PLATFORMTHEME`:
+`setup-cosmic.sh` installs an override of its desktop entry into
+`~/.local/share/applications/` (launcher and dock), and `setup-qt.sh` prefixes
+the `Exec=` line of `~/.config/autostart/Nextcloud.desktop` if Nextcloud has
+created it. Nextcloud rewrites that file when "Launch on system startup" is
+toggled, so re-run `setup-qt.sh` afterwards. Other tray apps are not affected.
 
 ## Running steps individually
 

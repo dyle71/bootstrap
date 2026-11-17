@@ -20,6 +20,13 @@
 #   ~/.config/qt6ct/
 #       Same look for the qt6ct platform theme (used if QT_QPA_PLATFORMTHEME
 #       is switched to qt6ct).
+#   ~/.config/autostart/Nextcloud.desktop
+#       With QT_QPA_PLATFORMTHEME=kde Nextcloud only passes the icon name
+#       "state-ok" to the tray (no pixmap). The COSMIC panel looks it up in its
+#       own icon theme, which lacks it, so the tray icon shows up broken. The
+#       Exec= line is prefixed with "env -u QT_QPA_PLATFORMTHEME" so Nextcloud
+#       sends a pixmap instead. Only touched if Nextcloud created the file; the
+#       launcher/dock entry is overridden by setup-cosmic.sh.
 #
 # Requires plasma-integration (KDE platform theme) and breeze to take effect.
 # Skipped on machines without a desktop (no COSMIC, Plasma or Dolphin).
@@ -102,6 +109,13 @@ echo "Installing qt6ct settings into ${DST}/qt6ct ..."
 mkdir -p "${DST}/qt6ct/colors"
 cp -v "${SRC}/qt6ct/colors/BreezeDark.conf" "${DST}/qt6ct/colors/"
 sed "s|/home/dyle/|${HOME}/|g" "${SRC}/qt6ct/qt6ct.conf" > "${DST}/qt6ct/qt6ct.conf"
+
+NEXTCLOUD_AUTOSTART="${DST}/autostart/Nextcloud.desktop"
+if [ -f "${NEXTCLOUD_AUTOSTART}" ] \
+    && ! grep -q '^Exec=env -u QT_QPA_PLATFORMTHEME ' "${NEXTCLOUD_AUTOSTART}"; then
+    echo "Starting Nextcloud without QT_QPA_PLATFORMTHEME in ${NEXTCLOUD_AUTOSTART} ..."
+    sed -i 's|^Exec=|Exec=env -u QT_QPA_PLATFORMTHEME |' "${NEXTCLOUD_AUTOSTART}"
+fi
 
 echo ""
 echo "Qt/KDE setup complete."
