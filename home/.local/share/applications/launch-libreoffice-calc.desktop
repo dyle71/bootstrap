@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=LibreOffice Calc (neues Fenster)
+Exec=libreoffice --calc
+Icon=/usr/share/icons/hicolor/256x256/apps/libreoffice-calc.png
+Terminal=false
+Categories=Utility;

@@ -7,7 +7,7 @@
     "org.kde.dolphin",
     "org.kde.kate",
     "launch-cosmic-term",
-    "libreoffice-calc",
+    "launch-libreoffice-calc",
     "org.keepassxc.KeePassXC",
     "launch-vscode",
     "org.kde.kmymoney",
