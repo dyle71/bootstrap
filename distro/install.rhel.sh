@@ -4,7 +4,7 @@
 # Note: iproute2 is called 'iproute' in RPM-based distros.
 set -e
 
-PACKAGES="neovim git net-tools eza difftastic iproute zsh curl wget fd-find ripgrep ncdu"
+PACKAGES="neovim git net-tools eza difftastic iproute zsh curl wget fd-find ripgrep ncdu jq"
 
 echo "Enabling EPEL repository..."
 sudo dnf install -y epel-release

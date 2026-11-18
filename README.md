@@ -60,7 +60,9 @@ Log out and back in afterwards.
 ## Installed packages
 
 `neovim  git  net-tools  eza  difftastic  iproute2  zsh  curl  wget`
-`fd  ripgrep  ncdu`
+`fd  ripgrep  ncdu  jq`
+
+`jq` is required by the Claude Code status line (`statusline-command.sh`).
 
 On Debian/Ubuntu fd is packaged as `fd-find` with the binary `fdfind`; the
 distro script links it to `/usr/local/bin/fd`.
@@ -91,6 +93,7 @@ distro/
   install.opensuse.sh
 setup-zsh.sh        # Install znap, Powerlevel10k and copy dotfiles
 setup-nvim.sh       # Copy NvChad config and run initial plugin sync
+setup-applications.sh # Copy helper scripts to ~/Applications, seed ~/.config/sync-onedrive/config.toml (never overwrites)
 setup-systemd.sh    # Install and enable systemd user units (mode: server | desktop)
 setup-claude.sh     # Copy Claude Code settings, status line and mods to ~/.claude
 setup-fonts.sh      # Copy user fonts to ~/.local/share/fonts and refresh the font cache
@@ -102,10 +105,12 @@ home/               # Dotfiles and config files
   .zshrc.dyle
   .p10k.zsh
   .gitconfig
-  .claude/          # Claude Code settings.json, statusline-command.sh, mods/
+  Applications/     # Helper scripts (sync-onedrive, laptop-primary-monitor.sh, git-repo-setup-*, ...)
+  .claude/          # Claude Code CLAUDE.md, settings.json, statusline-command.sh, mods/
   .config/
     nvim/           # NvChad-based neovim config
     bat/
+    sync-onedrive/  # config.toml for ~/Applications/sync-onedrive (seeded only if absent)
     cosmic/         # COSMIC desktop settings (panel, dock, theme, compositor, ...)
     environment.d/  # qt-theme.conf: QT_QPA_PLATFORMTHEME=qt6ct for the desktop session
     kdeglobals      # KDE colors (Breeze Dark), widget style, icons, fonts

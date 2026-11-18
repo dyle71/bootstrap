@@ -2,7 +2,7 @@
 # Install packages for openSUSE (Tumbleweed and Leap)
 set -e
 
-PACKAGES="neovim git net-tools eza iproute2 zsh curl wget fd ripgrep ncdu"
+PACKAGES="neovim git net-tools eza iproute2 zsh curl wget fd ripgrep ncdu jq"
 
 echo "Refreshing repositories..."
 sudo zypper --non-interactive refresh

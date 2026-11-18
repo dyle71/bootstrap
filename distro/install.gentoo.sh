@@ -15,6 +15,7 @@ PACKAGES="
     sys-apps/fd
     sys-apps/ripgrep
     sys-fs/ncdu
+    app-misc/jq
 "
 
 echo "Syncing portage tree..."

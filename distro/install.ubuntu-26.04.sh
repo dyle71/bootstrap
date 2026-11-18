@@ -2,7 +2,7 @@
 # Install packages for Ubuntu 26.04 LTS (Questing)
 set -e
 
-PACKAGES="neovim git net-tools eza iproute2 zsh curl wget fd-find ripgrep ncdu"
+PACKAGES="neovim git net-tools eza iproute2 zsh curl wget fd-find ripgrep ncdu jq"
 
 echo "Updating package lists..."
 sudo apt-get update -q

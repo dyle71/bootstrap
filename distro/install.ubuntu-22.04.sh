@@ -3,7 +3,7 @@
 # Note: eza is not in the default Ubuntu 22.04 repos and requires an external source.
 set -e
 
-PACKAGES="git net-tools iproute2 zsh curl wget gpg fd-find ripgrep ncdu"
+PACKAGES="git net-tools iproute2 zsh curl wget gpg fd-find ripgrep ncdu jq"
 
 echo "Updating package lists..."
 sudo apt-get update -q

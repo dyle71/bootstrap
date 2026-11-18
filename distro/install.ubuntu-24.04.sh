@@ -2,7 +2,7 @@
 # Install packages for Ubuntu 24.04 LTS (Noble)
 set -e
 
-PACKAGES="git net-tools eza iproute2 zsh curl wget fd-find ripgrep ncdu"
+PACKAGES="git net-tools eza iproute2 zsh curl wget fd-find ripgrep ncdu jq"
 
 echo "Updating package lists..."
 sudo apt-get update -q

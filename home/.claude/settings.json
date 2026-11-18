@@ -24,9 +24,6 @@
       "Read(//home/dyle/.claude/projects/**)"
     ],
     "ask": [
-      "Edit",
-      "Write",
-      "NotebookEdit",
       "Bash(git commit *)",
       "Bash(git merge *)",
       "Bash(git push *)",
@@ -34,8 +31,6 @@
       "Bash(git reset *)",
       "Bash(sudo *)",
       "Bash(rm *)",
-      "Bash(mv *)",
-      "Bash(cp *)",
       "Bash(pacman *)",
       "Bash(yay *)",
       "Bash(systemctl *)"
