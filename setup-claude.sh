@@ -17,6 +17,7 @@ sed "s|/home/dyle|${HOME}|g" "${BOOTSTRAP_DIR}/home/.claude/settings.json" > "${
 echo "'${BOOTSTRAP_DIR}/home/.claude/settings.json' -> '${HOME}/.claude/settings.json'"
 
 cp -v "${BOOTSTRAP_DIR}/home/.claude/statusline-command.sh" "${HOME}/.claude/statusline-command.sh"
+cp -v "${BOOTSTRAP_DIR}/home/.claude/CLAUDE.md" "${HOME}/.claude/CLAUDE.md"
 
 rm -rf "${HOME}/.claude/mods/context-bar"
 cp -rv "${BOOTSTRAP_DIR}/home/.claude/mods/context-bar" "${HOME}/.claude/mods/context-bar"
