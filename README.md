@@ -35,8 +35,9 @@ This will:
 2. Install the user fonts (JetBrainsMono NF Fixed for prompt and terminal)
 3. Install the COSMIC desktop settings (panel, dock, theme, terminal, ...)
 4. Install the Qt/KDE theme settings (Breeze Dark for KDE apps under COSMIC)
-5. Install and enable the desktop systemd user units (`laptop-primary-monitor`)
-6. Remove the temporary clone
+5. Install the helper scripts into `~/Applications`
+6. Install and enable the desktop systemd user units (`laptop-primary-monitor`)
+7. Remove the temporary clone
 
 Log out and back in afterwards.
 
@@ -129,7 +130,7 @@ session. These mirror the units running on the reference machine:
 - `rclone-token-refresh.service` + `.timer` — daily `rclone lsd` to keep the OAuth tokens fresh
 - `agentlytics.service` + `.timer` — daily agentlytics collect job
 - `laptop-primary-monitor.service` (desktop) — COSMIC only: watches DRM hotplug events and
-  keeps the internal laptop panel enabled and Xwayland-primary when an external
+  keeps the internal laptop panel enabled and Xwayland-primary and mirrors it when an external
   monitor is plugged in (see below)
 
 Units that need rclone remotes configured will fail to *start* until that
@@ -165,8 +166,11 @@ shown on all outputs (`output` = `All`).
 
 `~/Applications/laptop-primary-monitor.sh` uses `cosmic-randr` to enable the
 internal panel (`eDP-1`/`eDP-2`, auto-detected) and make it the Xwayland primary.
-It never enables the panel while the lid is closed. `laptop-primary-monitor.service`
-runs it with `--watch` after every hotplug.
+It never enables the panel while the lid is closed. By default it also mirrors
+the internal panel on every external output (COSMIC itself defaults to extend
+for unknown monitors). Opt out with `echo extend > ~/.config/monitor-mode`;
+remove the file to mirror again. `laptop-primary-monitor.service` runs it with
+`--watch` after every hotplug.
 
 ```sh
 journalctl --user -u laptop-primary-monitor.service -f   # watch it react to hotplugs

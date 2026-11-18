@@ -15,9 +15,11 @@
 #   5. Installs the user fonts (~/.local/share/fonts)
 #   6. Installs the COSMIC desktop settings (~/.config/cosmic)
 #   7. Installs the Qt/KDE theme settings
-#   8. Installs and enables the desktop systemd user units
+#   8. Installs the helper scripts into ~/Applications
+#      (needed by the desktop units, e.g. laptop-primary-monitor.sh)
+#   9. Installs and enables the desktop systemd user units
 #      (WantedBy=graphical-session.target, e.g. laptop-primary-monitor)
-#   9. Removes the temporary clone
+#  10. Removes the temporary clone
 set -e
 
 REPO_URL="https://github.com/dyle71/bootstrap.git"
@@ -100,7 +102,7 @@ git clone --depth 1 "${REPO_URL}" "${WORK_DIR}"
 # ---------------------------------------------------------------------------
 
 echo ""
-echo "=== Step 1/5: Installing Qt/KDE integration packages ==="
+echo "=== Step 1/6: Installing Qt/KDE integration packages ==="
 ${PKG_UPDATE}
 # One by one, so a package missing in this release does not abort the setup.
 for pkg in ${QT_PACKAGES}; do
@@ -110,19 +112,23 @@ for pkg in ${QT_PACKAGES}; do
 done
 
 echo ""
-echo "=== Step 2/5: Installing fonts ==="
+echo "=== Step 2/6: Installing fonts ==="
 sh "${WORK_DIR}/setup-fonts.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 3/5: Setting up COSMIC desktop ==="
+echo "=== Step 3/6: Setting up COSMIC desktop ==="
 sh "${WORK_DIR}/setup-cosmic.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 4/5: Setting up Qt/KDE theme ==="
+echo "=== Step 4/6: Setting up Qt/KDE theme ==="
 sh "${WORK_DIR}/setup-qt.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 5/5: Setting up desktop systemd user units ==="
+echo "=== Step 5/6: Installing helper scripts ==="
+sh "${WORK_DIR}/setup-applications.sh" "${WORK_DIR}"
+
+echo ""
+echo "=== Step 6/6: Setting up desktop systemd user units ==="
 sh "${WORK_DIR}/setup-systemd.sh" "${WORK_DIR}" desktop
 
 echo ""

@@ -10,6 +10,9 @@
 # everything is already right, and it never enables the panel while the lid
 # is closed.
 #
+# By default every external output mirrors the internal panel. To extend
+# instead: echo extend > ~/.config/monitor-mode (delete the file to go back).
+#
 # Usage:
 #   laptop-primary-monitor.sh            apply once
 #   laptop-primary-monitor.sh --watch    apply now and after every DRM hotplug
@@ -71,6 +74,17 @@ apply() {
         log "making ${internal} the Xwayland primary output"
         cosmic-randr xwayland --primary "${internal}"
     fi
+
+    # Default: mirror the internal panel on every external output.
+    # Opt out: echo extend > ~/.config/monitor-mode
+    local mode out
+    mode=$(cat "${XDG_CONFIG_HOME:-$HOME/.config}/monitor-mode" 2>/dev/null || echo mirror)
+    [ "${mode}" = mirror ] || return 0
+    for out in $(printf '%s\n' "${kdl}" | sed -n 's/^output "\([^"]*\)".*/\1/p'); do
+        [ "${out}" = "${internal}" ] && continue
+        log "mirroring ${internal} on ${out}"
+        cosmic-randr mirror "${out}" "${internal}" || log "mirror ${out} failed"
+    done
 }
 
 watch() {
