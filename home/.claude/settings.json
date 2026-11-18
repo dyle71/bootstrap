@@ -21,7 +21,7 @@
       "Read(//home/dyle/.aws/**)",
       "Read(**/.env)",
       "Read(//home/dyle/.claude/.credentials.json)",
-      "Read(//home/dyle/.claude/projects/**)"
+      "Read(//home/dyle/.claude/projects/*/*.jsonl)"
     ],
     "ask": [
       "Bash(git commit *)",

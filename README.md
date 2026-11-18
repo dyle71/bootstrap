@@ -204,6 +204,25 @@ toggled, so re-run `setup-qt.sh` afterwards. systemd generates
 `setup-qt.sh` runs `systemctl --user daemon-reload` so the change applies
 without logging out. Other tray apps are not affected.
 
+## Claude Code
+
+`setup-claude.sh` copies `home/.claude/` to `~/.claude/`:
+
+- `CLAUDE.md`: global rules. Reports stay terse; changes to the system
+  (packages, services, configuration, dotfiles, `~/.config`, `~/.claude`, files
+  outside the current project) are shown as command or diff and need explicit
+  confirmation. Source, tests and docs of the current project are edited
+  directly. No commit, merge or push without explicit OK.
+- `settings.json`: permissions. `ask` for git writes (commit, merge, push,
+  rebase, reset), `sudo`, `rm`, `pacman`, `yay` and `systemctl`. `deny` reads of
+  `~/.ssh`, `~/.aws`, `.env` files, `~/.claude/.credentials.json` and session
+  transcripts (`~/.claude/projects/*/*.jsonl`); project memory under
+  `~/.claude/projects/` stays readable.
+- `statusline-command.sh` and `mods/`: status line and context-bar mod.
+
+The live `~/.claude/` is the source of truth: change settings there, then copy
+them back into this repository.
+
 ## Running steps individually
 
 ```sh
