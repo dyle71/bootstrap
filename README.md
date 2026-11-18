@@ -31,13 +31,14 @@ curl https://raw.githubusercontent.com/dyle71/bootstrap/main/install-de.sh | sh
 
 This will:
 
-1. Install the Qt/KDE integration packages (Breeze Dark for Dolphin & co.)
+1. Install the Qt/KDE integration packages (Breeze Dark for Dolphin & co.) and the dark GTK theme
 2. Install the user fonts (JetBrainsMono NF Fixed for prompt and terminal)
 3. Install the COSMIC desktop settings (panel, dock, theme, terminal, ...)
 4. Install the Qt/KDE theme settings (Breeze Dark for KDE apps under COSMIC)
-5. Install the helper scripts into `~/Applications`
-6. Install and enable the desktop systemd user units (`laptop-primary-monitor`)
-7. Remove the temporary clone
+5. Install the GTK theme settings (dark theme for GTK and Electron apps, e.g. the VS Code menu bar)
+6. Install the helper scripts into `~/Applications`
+7. Install and enable the desktop systemd user units (`laptop-primary-monitor`)
+8. Remove the temporary clone
 
 Log out and back in afterwards.
 
@@ -68,6 +69,9 @@ distro script links it to `/usr/local/bin/fd`.
 
 `breeze  qt6-wayland  qt6ct`
 
+and the dark GTK theme where packaged (`adw-gtk-theme` on Arch, `adw-gtk3-theme`
+on Fedora/RHEL; elsewhere `setup-gtk.sh` falls back to GTK3's built-in `Adwaita-dark`).
+
 ## Repository layout
 
 ```text
@@ -91,6 +95,7 @@ setup-systemd.sh    # Install and enable systemd user units (mode: server | desk
 setup-claude.sh     # Copy Claude Code settings, status line and mods to ~/.claude
 setup-fonts.sh      # Copy user fonts to ~/.local/share/fonts and refresh the font cache
 setup-cosmic.sh     # Copy COSMIC desktop settings to ~/.config/cosmic
+setup-gtk.sh        # GTK theme: adw-gtk3-dark (or Adwaita-dark) in gsettings and ~/.config/gtk-{3,4}.0/settings.ini
 setup-qt.sh         # Qt/KDE theme: QT_QPA_PLATFORMTHEME=qt6ct (environment.d + ~/.zprofile), kdeglobals, per-app Breeze Dark, qt6ct (Breeze Dark palette enforced)
 home/               # Dotfiles and config files
   .zshrc
@@ -209,6 +214,7 @@ sh setup-claude.sh               # install Claude Code configuration
 sh setup-fonts.sh                # install user fonts
 sh setup-cosmic.sh               # install COSMIC desktop settings
 sh setup-qt.sh                   # install Qt/KDE theme settings
+sh setup-gtk.sh                  # install GTK theme settings
 sh setup-systemd.sh . desktop    # install desktop systemd user units
 ```
 
