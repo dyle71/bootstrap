@@ -90,7 +90,7 @@ setup-systemd.sh    # Install and enable systemd user units (mode: server | desk
 setup-claude.sh     # Copy Claude Code settings, status line and mods to ~/.claude
 setup-fonts.sh      # Copy user fonts to ~/.local/share/fonts and refresh the font cache
 setup-cosmic.sh     # Copy COSMIC desktop settings to ~/.config/cosmic
-setup-qt.sh         # Qt/KDE theme: QT_QPA_PLATFORMTHEME=qt6ct (environment.d + ~/.zprofile), kdeglobals, per-app Breeze Dark, qt6ct
+setup-qt.sh         # Qt/KDE theme: QT_QPA_PLATFORMTHEME=qt6ct (environment.d + ~/.zprofile), kdeglobals, per-app Breeze Dark, qt6ct (Breeze Dark palette enforced)
 home/               # Dotfiles and config files
   .zshrc
   .zshrc.dyle

@@ -29,9 +29,13 @@
 #       explicit color scheme per program fixes that.
 #   ~/.config/qt6ct/
 #       Breeze style, breeze-dark icons, Breeze Dark palette and fonts for the
-#       qt6ct platform theme. Only installed if no qt6ct.conf exists yet:
-#       COSMIC (cosmic-settings-daemon) rewrites qt6ct.conf with its own
-#       palette at login, so this is just the fallback for other desktops.
+#       qt6ct platform theme. The full qt6ct.conf is only installed if none
+#       exists yet, because COSMIC (cosmic-settings-daemon) may write its own.
+#       An existing qt6ct.conf only gets the Breeze Dark palette enforced
+#       (color_scheme_path, custom_palette=true): with custom_palette=false Qt
+#       uses Breeze's light default palette together with the breeze-dark
+#       icons, so e.g. LibreOffice (qt6 VCL plugin) shows white icons on light
+#       toolbars. Re-run this script if COSMIC resets it.
 #   ~/.config/autostart/Nextcloud.desktop
 #       With a Qt platform theme that sets the breeze-dark icon theme Nextcloud
 #       only passes the icon name "state-ok" to the tray (no pixmap). The
@@ -134,7 +138,26 @@ if [ ! -f "${DST}/qt6ct/qt6ct.conf" ]; then
     cp -v "${SRC}/qt6ct/colors/BreezeDark.conf" "${DST}/qt6ct/colors/"
     sed "s|/home/dyle/|${HOME}/|g" "${SRC}/qt6ct/qt6ct.conf" > "${DST}/qt6ct/qt6ct.conf"
 else
-    echo "${DST}/qt6ct/qt6ct.conf exists (COSMIC manages it) - left untouched."
+    echo "Enforcing the Breeze Dark palette in ${DST}/qt6ct/qt6ct.conf ..."
+    mkdir -p "${DST}/qt6ct/colors"
+    cp -v "${SRC}/qt6ct/colors/BreezeDark.conf" "${DST}/qt6ct/colors/"
+    set_qt6ct_appearance() {
+        # Set key=value in the [Appearance] section, adding section/key if missing.
+        awk -v key="$1" -v val="$2" '
+            /^\[/ {
+                if (in_sec && !done) { print key "=" val; done = 1 }
+                in_sec = ($0 == "[Appearance]"); seen = seen || in_sec
+            }
+            in_sec && index($0, key "=") == 1 { print key "=" val; done = 1; next }
+            { print }
+            END {
+                if (!seen) { print "[Appearance]" }
+                if (!done) { print key "=" val }
+            }' "${DST}/qt6ct/qt6ct.conf" > "${DST}/qt6ct/qt6ct.conf.tmp"
+        mv "${DST}/qt6ct/qt6ct.conf.tmp" "${DST}/qt6ct/qt6ct.conf"
+    }
+    set_qt6ct_appearance color_scheme_path "${DST}/qt6ct/colors/BreezeDark.conf"
+    set_qt6ct_appearance custom_palette true
 fi
 
 NEXTCLOUD_AUTOSTART="${DST}/autostart/Nextcloud.desktop"
