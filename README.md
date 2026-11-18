@@ -65,7 +65,7 @@ distro script links it to `/usr/local/bin/fd`.
 
 `install-de.sh` additionally installs (Qt/KDE theme integration, names vary per distro):
 
-`plasma-integration  breeze  qt6-wayland  qt6ct`
+`breeze  qt6-wayland  qt6ct`
 
 ## Repository layout
 
@@ -90,7 +90,7 @@ setup-systemd.sh    # Install and enable systemd user units (mode: server | desk
 setup-claude.sh     # Copy Claude Code settings, status line and mods to ~/.claude
 setup-fonts.sh      # Copy user fonts to ~/.local/share/fonts and refresh the font cache
 setup-cosmic.sh     # Copy COSMIC desktop settings to ~/.config/cosmic
-setup-qt.sh         # Qt/KDE theme: QT_QPA_PLATFORMTHEME=kde (environment.d + ~/.zprofile), kdeglobals, qt6ct
+setup-qt.sh         # Qt/KDE theme: QT_QPA_PLATFORMTHEME=qt6ct (environment.d + ~/.zprofile), kdeglobals, per-app Breeze Dark, qt6ct
 home/               # Dotfiles and config files
   .zshrc
   .zshrc.dyle
@@ -101,9 +101,9 @@ home/               # Dotfiles and config files
     nvim/           # NvChad-based neovim config
     bat/
     cosmic/         # COSMIC desktop settings (panel, dock, theme, compositor, ...)
-    environment.d/  # qt-theme.conf: QT_QPA_PLATFORMTHEME=kde for the desktop session
+    environment.d/  # qt-theme.conf: QT_QPA_PLATFORMTHEME=qt6ct for the desktop session
     kdeglobals      # KDE colors (Breeze Dark), widget style, icons, fonts
-    qt6ct/          # qt6ct config and Breeze Dark color scheme
+    qt6ct/          # qt6ct fallback config (COSMIC writes its own at login)
     systemd/
       user/         # systemd user units (services and timers)
   .local/
@@ -174,17 +174,21 @@ journalctl --user -u laptop-primary-monitor.service -f   # watch it react to hot
 
 ### Nextcloud tray icon (COSMIC)
 
-With `QT_QPA_PLATFORMTHEME=kde` and the breeze-dark icon theme, Nextcloud only
-passes the icon name `state-ok` to the tray (no pixmap). The COSMIC panel looks
-that name up in its own icon theme (Cosmic, Pop, hicolor), where it does not
-exist, so the tray icon shows up broken. Without the KDE platform theme
+With a Qt platform theme (`QT_QPA_PLATFORMTHEME=qt6ct`) that sets the
+breeze-dark icon theme, Nextcloud only passes the icon name `state-ok` to the
+tray (no pixmap). The COSMIC panel looks that name up in its own icon theme
+(Cosmic, Pop, hicolor), where it does not exist, so the tray icon shows up
+broken. Without the platform theme
 Nextcloud sends the icon as a pixmap, which COSMIC displays correctly.
 Nextcloud is therefore started with `env -u QT_QPA_PLATFORMTHEME`:
 `setup-cosmic.sh` installs an override of its desktop entry into
 `~/.local/share/applications/` (launcher and dock), and `setup-qt.sh` prefixes
 the `Exec=` line of `~/.config/autostart/Nextcloud.desktop` if Nextcloud has
 created it. Nextcloud rewrites that file when "Launch on system startup" is
-toggled, so re-run `setup-qt.sh` afterwards. Other tray apps are not affected.
+toggled, so re-run `setup-qt.sh` afterwards. systemd generates
+`app-Nextcloud@autostart.service` from the autostart entry at login;
+`setup-qt.sh` runs `systemctl --user daemon-reload` so the change applies
+without logging out. Other tray apps are not affected.
 
 ## Running steps individually
 

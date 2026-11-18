@@ -3,32 +3,47 @@
 # Hack fonts) so KDE/Qt programs such as Dolphin look right outside of Plasma,
 # e.g. when started from the COSMIC launcher or dock.
 #
+# The qt6ct platform theme is used instead of KDE's own (plasma-integration),
+# because plasma-integration pulls in xdg-desktop-portal-kde and with it most
+# of the Plasma workspace.
+#
 #   ~/.config/environment.d/qt-theme.conf
-#       QT_QPA_PLATFORMTHEME=kde for the systemd user session. Programs started
-#       by the desktop (launcher, dock) inherit it, so Qt loads the KDE platform
-#       theme (plasma-integration) which reads ~/.config/kdeglobals.
+#       QT_QPA_PLATFORMTHEME=qt6ct for the systemd user session. Programs
+#       started by the desktop (launcher, dock) inherit it, so Qt loads the
+#       qt6ct platform theme which reads ~/.config/qt6ct/qt6ct.conf.
 #   ~/.zprofile
 #       COSMIC's start-cosmic does not use environment.d: it runs "$SHELL -l"
 #       and, if QT_QPA_PLATFORMTHEME is still unset, sets it to cosmic/qt5ct
 #       itself. A block in ~/.zprofile therefore exports qt-theme.conf in the
 #       login shell before start-cosmic decides. Added once, existing content kept.
 #   ~/.config/kdeglobals
-#       Color scheme, widget style, icon theme and fonts. Only the theme
+#       Color scheme, widget style, icon theme and fonts. KDE programs read the
+#       color scheme from here regardless of the platform theme. Only the theme
 #       related groups are shipped; they are merged key by key with
 #       kwriteconfig6, so other keys on the target machine are kept. Without
 #       kwriteconfig6 the file is only copied if none exists yet.
+#   ~/.config/{dolphinrc,katerc,okularrc,gwenviewrc,kmymoney/kmymoneyrc}
+#       [UiSettings] ColorScheme=BreezeDark. Without the KDE platform theme
+#       these programs pick a light window palette on their own but still draw
+#       text and alternating rows from kdeglobals (white on light grey). An
+#       explicit color scheme per program fixes that.
 #   ~/.config/qt6ct/
-#       Same look for the qt6ct platform theme (used if QT_QPA_PLATFORMTHEME
-#       is switched to qt6ct).
+#       Breeze style, breeze-dark icons, Breeze Dark palette and fonts for the
+#       qt6ct platform theme. Only installed if no qt6ct.conf exists yet:
+#       COSMIC (cosmic-settings-daemon) rewrites qt6ct.conf with its own
+#       palette at login, so this is just the fallback for other desktops.
 #   ~/.config/autostart/Nextcloud.desktop
-#       With QT_QPA_PLATFORMTHEME=kde Nextcloud only passes the icon name
-#       "state-ok" to the tray (no pixmap). The COSMIC panel looks it up in its
-#       own icon theme, which lacks it, so the tray icon shows up broken. The
-#       Exec= line is prefixed with "env -u QT_QPA_PLATFORMTHEME" so Nextcloud
-#       sends a pixmap instead. Only touched if Nextcloud created the file; the
-#       launcher/dock entry is overridden by setup-cosmic.sh.
+#       With a Qt platform theme that sets the breeze-dark icon theme Nextcloud
+#       only passes the icon name "state-ok" to the tray (no pixmap). The
+#       COSMIC panel looks it up in its own icon theme, which lacks it, so the
+#       tray icon shows up broken. The Exec= line is prefixed with
+#       "env -u QT_QPA_PLATFORMTHEME" so Nextcloud sends a pixmap instead.
+#       Only touched if Nextcloud created the file; the launcher/dock entry is
+#       overridden by setup-cosmic.sh. systemd turns the autostart entry into a
+#       unit at login, so the user manager is reloaded to pick up the change
+#       without logging out.
 #
-# Requires plasma-integration (KDE platform theme) and breeze to take effect.
+# Requires qt6ct and breeze to take effect.
 # Skipped on machines without a desktop (no COSMIC, Plasma or Dolphin).
 #
 # When called from install-de.sh the bootstrap directory is passed as $1.
@@ -105,16 +120,31 @@ else
     echo "kwriteconfig6 not found and ${DST}/kdeglobals exists - left untouched."
 fi
 
-echo "Installing qt6ct settings into ${DST}/qt6ct ..."
-mkdir -p "${DST}/qt6ct/colors"
-cp -v "${SRC}/qt6ct/colors/BreezeDark.conf" "${DST}/qt6ct/colors/"
-sed "s|/home/dyle/|${HOME}/|g" "${SRC}/qt6ct/qt6ct.conf" > "${DST}/qt6ct/qt6ct.conf"
+if command -v kwriteconfig6 > /dev/null 2>&1; then
+    echo "Setting the Breeze Dark color scheme for KDE programs ..."
+    for rc in dolphinrc katerc okularrc gwenviewrc kmymoney/kmymoneyrc; do
+        mkdir -p "$(dirname "${DST}/${rc}")"
+        kwriteconfig6 --file "${DST}/${rc}" --group UiSettings --key ColorScheme -- BreezeDark
+    done
+fi
+
+if [ ! -f "${DST}/qt6ct/qt6ct.conf" ]; then
+    echo "Installing qt6ct settings into ${DST}/qt6ct ..."
+    mkdir -p "${DST}/qt6ct/colors"
+    cp -v "${SRC}/qt6ct/colors/BreezeDark.conf" "${DST}/qt6ct/colors/"
+    sed "s|/home/dyle/|${HOME}/|g" "${SRC}/qt6ct/qt6ct.conf" > "${DST}/qt6ct/qt6ct.conf"
+else
+    echo "${DST}/qt6ct/qt6ct.conf exists (COSMIC manages it) - left untouched."
+fi
 
 NEXTCLOUD_AUTOSTART="${DST}/autostart/Nextcloud.desktop"
 if [ -f "${NEXTCLOUD_AUTOSTART}" ] \
     && ! grep -q '^Exec=env -u QT_QPA_PLATFORMTHEME ' "${NEXTCLOUD_AUTOSTART}"; then
     echo "Starting Nextcloud without QT_QPA_PLATFORMTHEME in ${NEXTCLOUD_AUTOSTART} ..."
     sed -i 's|^Exec=|Exec=env -u QT_QPA_PLATFORMTHEME |' "${NEXTCLOUD_AUTOSTART}"
+    if systemctl --user daemon-reload 2> /dev/null; then
+        echo "Restart Nextcloud (or log out and back in) to apply."
+    fi
 fi
 
 echo ""

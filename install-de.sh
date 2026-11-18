@@ -43,32 +43,32 @@ case "${ID}" in
     debian|ubuntu|linuxmint|pop)
         PKG_UPDATE="${SUDO} apt-get update -q"
         PKG_INSTALL="${SUDO} apt-get install -y"
-        QT_PACKAGES="plasma-integration breeze qt6-wayland qt6ct"
+        QT_PACKAGES="breeze qt6-wayland qt6ct"
         ;;
     arch)
         PKG_UPDATE="${SUDO} pacman -Sy --noconfirm"
         PKG_INSTALL="${SUDO} pacman -S --noconfirm --needed"
-        QT_PACKAGES="plasma-integration breeze qt6-wayland qt6ct"
+        QT_PACKAGES="breeze qt6-wayland qt6ct"
         ;;
     alpine)
         PKG_UPDATE="${SUDO} apk update"
         PKG_INSTALL="${SUDO} apk add --no-cache"
-        QT_PACKAGES="plasma-integration breeze qt6-qtwayland qt6ct"
+        QT_PACKAGES="breeze qt6-qtwayland qt6ct"
         ;;
     fedora|rhel)
         PKG_UPDATE="true"
         PKG_INSTALL="${SUDO} dnf install -y"
-        QT_PACKAGES="plasma-integration plasma-breeze qt6-qtwayland qt6ct"
+        QT_PACKAGES="plasma-breeze qt6-qtwayland qt6ct"
         ;;
     gentoo)
         PKG_UPDATE="true"
         PKG_INSTALL="${SUDO} emerge --quiet --noreplace"
-        QT_PACKAGES="kde-plasma/plasma-integration kde-plasma/breeze dev-qt/qtwayland x11-misc/qt6ct"
+        QT_PACKAGES="kde-plasma/breeze dev-qt/qtwayland x11-misc/qt6ct"
         ;;
     opensuse-tumbleweed|opensuse-leap|opensuse)
         PKG_UPDATE="${SUDO} zypper --non-interactive refresh"
         PKG_INSTALL="${SUDO} zypper --non-interactive install"
-        QT_PACKAGES="plasma6-integration-plugin breeze6-style qt6-wayland qt6ct"
+        QT_PACKAGES="breeze6-style qt6-wayland qt6ct"
         ;;
     *)
         error "Unsupported OS: ${ID}"
