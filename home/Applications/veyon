@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+set -e
+
+usage() {
+    echo "Update Veyon configuration with pupils of current lesson in a given room"
+    echo
+    echo "$(basename "$0") room [localTime]"
+    echo "      room        room name like IF1, if2, ... or a room number like 144"
+    echo "      localTime   local time when current lesson started like 08:00, 09:40"
+    echo "                  (default: 08:00)"
+    echo
+    echo "Known rooms:"
+    echo "      IF1  172.25.53.0/24  (Projektraum)"
+    echo "      IF2  172.25.50.0/24  (Aquarium)"
+    echo "      IF3  172.25.41.0/24  (Bunker)"
+    echo "      IF5  172.25.44.0/24"
+    echo "      IF6  172.25.26.0/24"
+    echo "      IF7  172.25.27.0/24  (kl. Raum gegenueber Aquarium)"
+    echo
+    echo "Room numbers use the general pattern of the first floor:"
+    echo "      172.25.(room-number % 100).0/24"
+}
+
+if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+    usage
+    exit 1
+fi
+
+ROOM=$1
+LOCAL_TIME=${2:-08:00}
+
+case "${ROOM,,}" in
+    if1) OCTET=53 ;;
+    if2) OCTET=50 ;;
+    if3) OCTET=41 ;;
+    if5) OCTET=44 ;;
+    if6) OCTET=26 ;;
+    if7) OCTET=27 ;;
+    *[!0-9]*|"")
+        echo "Unknown room: ${ROOM}"
+        echo
+        usage
+        exit 1
+        ;;
+    *) OCTET=$((10#$ROOM % 100)) ;;
+esac
+
+IP_RANGE="172.25.${OCTET}.0/24"
+
+echo "Room ${ROOM} -> ${IP_RANGE}, lesson started at ${LOCAL_TIME}"
+exec update-veyon.sh "${IP_RANGE}" "${LOCAL_TIME}"
+
