@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Thunderbird (neues Fenster)
+Exec=thunderbird
+Icon=/usr/share/icons/hicolor/256x256/apps/org.mozilla.Thunderbird.png
+Terminal=false
+Categories=Utility;

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Kate (neues Fenster)
+Exec=kate --new
+Icon=/usr/share/icons/hicolor/scalable/apps/kate.svg
+Terminal=false
+Categories=Utility;

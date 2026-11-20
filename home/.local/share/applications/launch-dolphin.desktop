@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Dolphin (neues Fenster)
+Exec=dolphin --new-window
+Icon=/usr/share/icons/hicolor/scalable/apps/org.kde.dolphin.svg
+Terminal=false
+Categories=Utility;

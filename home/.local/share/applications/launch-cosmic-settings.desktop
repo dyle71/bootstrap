@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=COSMIC Settings (neues Fenster)
+Exec=cosmic-settings
+Icon=/usr/share/icons/hicolor/256x256/apps/com.system76.CosmicSettings.svg
+Terminal=false
+Categories=Utility;

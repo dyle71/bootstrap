@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=KMyMoney (neues Fenster)
+Exec=kmymoney
+Icon=/usr/share/icons/hicolor/256x256/apps/kmymoney.png
+Terminal=false
+Categories=Utility;

@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Steam (neues Fenster)
+Exec=/usr/bin/steam
+Icon=/usr/share/icons/hicolor/256x256/apps/steam.png
+Terminal=false
+Categories=Utility;

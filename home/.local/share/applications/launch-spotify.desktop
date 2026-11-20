@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Spotify (neues Fenster)
+Exec=spotify
+Icon=/usr/share/icons/hicolor/256x256/apps/spotify.png
+Terminal=false
+Categories=Utility;
