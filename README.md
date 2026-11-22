@@ -167,6 +167,16 @@ The COSMIC terminal is set to the `JetBrainsMono NF Fixed` font, which
 `setup-fonts.sh` installs from `home/.local/share/fonts/` (`install-de.sh`
 runs it before `setup-cosmic.sh`).
 
+### No focus stealing (COSMIC)
+
+By default an app that requests activation (e.g. Telegram on a new message)
+gets the focus, and COSMIC switches to its workspace. The compositor key
+`com.system76.CosmicComp/v1/activation_policy` is set to `Urgent`: windows
+never take the focus themselves and are only marked urgent. This applies to
+all apps (a link clicked in another app does not raise the browser either).
+Other values: `Focus` (default), `FocusIfActiveWorkspace`. COSMIC Settings has
+no UI for this key.
+
 ### Laptop panel stays on and primary (COSMIC)
 
 Wayland has no global "primary monitor". COSMIC remembers a layout per monitor
