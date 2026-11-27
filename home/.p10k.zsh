@@ -85,7 +85,7 @@
     gcloud                  # google cloud cli account and project (https://cloud.google.com/)
     google_app_cred         # google application credentials (https://cloud.google.com/docs/authentication/production)
     toolbox                 # toolbox name (https://github.com/containers/toolbox)
-    context                 # user@hostname
+    # context               # user@hostname (shown in os_icon instead)
     nordvpn                 # nordvpn connection status, linux only (https://nordvpn.com/)
     ranger                  # ranger shell (https://github.com/ranger/ranger)
     yazi                    # yazi shell (https://github.com/sxyazi/yazi)
@@ -195,6 +195,14 @@
   #################################[ os_icon: os identifier ]##################################
   # OS identifier color.
   typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=255
+  # Show user@host next to the os icon (context segment removed from right prompt).
+  typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='${P9K_CONTENT}  %F{76}%n@%m'  # user@host grün
+  # Root: os icon red background, white icon.
+  if (( EUID == 0 )); then
+    typeset -g POWERLEVEL9K_OS_ICON_BACKGROUND=160  # rot
+    typeset -g POWERLEVEL9K_OS_ICON_FOREGROUND=255  # weiß
+    typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='${P9K_CONTENT}  %n@%m'  # user@host weiß
+  fi
   # Custom icon.
   # typeset -g POWERLEVEL9K_OS_ICON_CONTENT_EXPANSION='⭐'
 
