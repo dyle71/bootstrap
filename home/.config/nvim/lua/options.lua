@@ -7,6 +7,7 @@ o.cursorlineopt ='both'
 o.number = true
 o.relativenumber = true
 o.cursorline = true
+o.wrap = false
 
 o.expandtab = true
 o.shiftwidth = 2
