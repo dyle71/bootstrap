@@ -36,9 +36,10 @@ This will:
 3. Install the COSMIC desktop settings (panel, dock, theme, terminal, ...)
 4. Install the Qt/KDE theme settings (Breeze Dark for KDE apps under COSMIC)
 5. Install the GTK theme settings (dark theme for GTK and Electron apps, e.g. the VS Code menu bar)
-6. Install the helper scripts into `~/Applications`
-7. Install and enable the desktop systemd user units (`laptop-primary-monitor`)
-8. Remove the temporary clone
+6. Install the mouse cursor theme (Oxygen 13 Green Emerald) for compositor, GTK and Qt/KDE
+7. Install the helper scripts into `~/Applications`
+8. Install and enable the desktop systemd user units (`laptop-primary-monitor`)
+9. Remove the temporary clone
 
 Log out and back in afterwards.
 
@@ -99,12 +100,14 @@ setup-claude.sh     # Copy Claude Code settings, status line and mods to ~/.clau
 setup-fonts.sh      # Copy user fonts to ~/.local/share/fonts and refresh the font cache
 setup-cosmic.sh     # Copy COSMIC desktop settings to ~/.config/cosmic
 setup-gtk.sh        # GTK theme: adw-gtk3-dark (or Adwaita-dark) in gsettings and ~/.config/gtk-{3,4}.0/settings.ini
+setup-cursor.sh     # Mouse cursor: Oxygen 13 Green Emerald into ~/.icons, XCURSOR_THEME (environment.d + ~/.zprofile), GTK, gsettings, kcminputrc, xsettingsd
 setup-qt.sh         # Qt/KDE theme: QT_QPA_PLATFORMTHEME=qt6ct (environment.d + ~/.zprofile), kdeglobals, per-app Breeze Dark, qt6ct (Breeze Dark palette enforced)
 home/               # Dotfiles and config files
   .zshrc
   .zshrc.dyle
   .p10k.zsh
   .gitconfig
+  .icons/           # Oxygen 13 Green Emerald cursor theme (installed by setup-cursor.sh)
   Applications/     # Helper scripts (sync-onedrive, laptop-primary-monitor.sh, git-repo-setup-*, ...)
   .claude/          # Claude Code CLAUDE.md, settings.json, statusline-command.sh, mods/
   .config/
@@ -112,7 +115,7 @@ home/               # Dotfiles and config files
     bat/
     sync-onedrive/  # config.toml for ~/Applications/sync-onedrive (seeded only if absent)
     cosmic/         # COSMIC desktop settings (panel, dock, theme, compositor, ...)
-    environment.d/  # qt-theme.conf: QT_QPA_PLATFORMTHEME=qt6ct for the desktop session
+    environment.d/  # qt-theme.conf: QT_QPA_PLATFORMTHEME=qt6ct; cursor.conf: XCURSOR_THEME/XCURSOR_SIZE
     kdeglobals      # KDE colors (Breeze Dark), widget style, icons, fonts
     qt6ct/          # qt6ct fallback config (COSMIC writes its own at login)
     systemd/
@@ -249,6 +252,7 @@ sh setup-fonts.sh                # install user fonts
 sh setup-cosmic.sh               # install COSMIC desktop settings
 sh setup-qt.sh                   # install Qt/KDE theme settings
 sh setup-gtk.sh                  # install GTK theme settings
+sh setup-cursor.sh               # install mouse cursor theme
 sh setup-systemd.sh . desktop    # install desktop systemd user units
 ```
 

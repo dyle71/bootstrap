@@ -17,11 +17,13 @@
 #   6. Installs the COSMIC desktop settings (~/.config/cosmic)
 #   7. Installs the Qt/KDE theme settings
 #   8. Installs the GTK theme settings (dark theme for GTK and Electron apps)
-#   9. Installs the helper scripts into ~/Applications
+#   9. Installs the mouse cursor theme (Oxygen 13 Green Emerald) and sets it
+#      for compositor, GTK and Qt/KDE (incl. XCURSOR_THEME in environment.d)
+#  10. Installs the helper scripts into ~/Applications
 #      (needed by the desktop units, e.g. laptop-primary-monitor.sh)
-#  10. Installs and enables the desktop systemd user units
+#  11. Installs and enables the desktop systemd user units
 #      (WantedBy=graphical-session.target, e.g. laptop-primary-monitor)
-#  11. Removes the temporary clone
+#  12. Removes the temporary clone
 set -e
 
 REPO_URL="https://github.com/dyle71/bootstrap.git"
@@ -109,7 +111,7 @@ git clone --depth 1 "${REPO_URL}" "${WORK_DIR}"
 # ---------------------------------------------------------------------------
 
 echo ""
-echo "=== Step 1/7: Installing Qt/KDE and GTK theme packages ==="
+echo "=== Step 1/8: Installing Qt/KDE and GTK theme packages ==="
 ${PKG_UPDATE}
 # One by one, so a package missing in this release does not abort the setup.
 for pkg in ${QT_PACKAGES}; do
@@ -124,27 +126,31 @@ for pkg in ${GTK_PACKAGES}; do
 done
 
 echo ""
-echo "=== Step 2/7: Installing fonts ==="
+echo "=== Step 2/8: Installing fonts ==="
 sh "${WORK_DIR}/setup-fonts.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 3/7: Setting up COSMIC desktop ==="
+echo "=== Step 3/8: Setting up COSMIC desktop ==="
 sh "${WORK_DIR}/setup-cosmic.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 4/7: Setting up Qt/KDE theme ==="
+echo "=== Step 4/8: Setting up Qt/KDE theme ==="
 sh "${WORK_DIR}/setup-qt.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 5/7: Setting up GTK theme ==="
+echo "=== Step 5/8: Setting up GTK theme ==="
 sh "${WORK_DIR}/setup-gtk.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 6/7: Installing helper scripts ==="
+echo "=== Step 6/8: Setting up mouse cursor ==="
+sh "${WORK_DIR}/setup-cursor.sh" "${WORK_DIR}"
+
+echo ""
+echo "=== Step 7/8: Installing helper scripts ==="
 sh "${WORK_DIR}/setup-applications.sh" "${WORK_DIR}"
 
 echo ""
-echo "=== Step 7/7: Setting up desktop systemd user units ==="
+echo "=== Step 8/8: Setting up desktop systemd user units ==="
 sh "${WORK_DIR}/setup-systemd.sh" "${WORK_DIR}" desktop
 
 echo ""
